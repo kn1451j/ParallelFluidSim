@@ -1,4 +1,5 @@
 #include <vector>
+#include "particle.hpp"
 
 // Grid coarsness
 #define ROW_NUM 500
@@ -20,6 +21,10 @@ class Grid
             this->height = height;
         };
 
+        void transfer_to_grid(std::vector<Particle>& particles);
+        void transfer_from_grid(std::vector<Particle>& particles);
+        void solve_pressure();
+
     private:
         double pressure_grid[ROW_NUM][COL_NUM] {};
         double horizontal_velocity[ROW_NUM][COL_NUM] {};
@@ -27,4 +32,4 @@ class Grid
 
         double width;
         double height;
-}
+};
