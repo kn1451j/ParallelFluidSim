@@ -8,13 +8,15 @@ void Fluid::run()
     // start timestep timer
     this->prev_timestep = std::chrono::high_resolution_clock::now();
 
-    while(cv::waitKey(0)>0){
+    while(1){
         this->timestep();
 
         printf("Updated %zu particles\n", this->particles.size());
 
         // display a frame (for now just in 2D)
         this->display_particles();
+
+        if(cv::waitKey(1)>0) break;
     }
 }
 

@@ -23,3 +23,8 @@ void Grid::solve_pressure()
 {
     return;
 }
+
+grid_idx_t Grid::get_particle_idx(Particle p)
+{
+    return std::tuple<size_t, size_t>(p.position.x/this->cell_width, p.position.y/this->cell_height);
+}

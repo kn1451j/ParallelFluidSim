@@ -1,4 +1,0 @@
-/Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/build/CMakeFiles/run.dir
-/Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/build/CMakeFiles/fluid.dir
-/Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/build/CMakeFiles/edit_cache.dir
-/Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/build/CMakeFiles/rebuild_cache.dir
