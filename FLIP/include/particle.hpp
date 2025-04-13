@@ -1,37 +1,47 @@
 
-#define NUM_PARTICLES 1024
-#define SQRT_NUM_PARTICLES 32
+#define NUM_PARTICLES 4
+#define SQRT_NUM_PARTICLES 2
 
 struct Point
 {
-    public:
-        Point(double x, double y, double z)
-        {
-            this->x = x;
-            this->y = y;
-            this->z = z;
-        };
+    Point(double x, double y, double z)
+    {
+        this->x = x;
+        this->y = y;
+        this->z = z;
+    };
 
-        Point()
-        {
-            this->x = 0;
-            this->y = 0;
-            this->z = 0;
-        };
+    Point()
+    {
+        this->x = 0;
+        this->y = 0;
+        this->z = 0;
+    };
 
-        double x;
-        double y;
-        double z;
+    double x;
+    double y;
+    double z;
 };
 
 struct Particle
 {
     public:
-        Particle(double x, double y, double z)
+        Particle(int id, Point position, Point velocity, double mass)
         {
             // TODO make sure this is memory safe in terms of ownership
+            this->velocity = velocity;
+            this->position = position;
+            this->id = id;
+            this->mass = mass;
+        };
+
+        Particle(int id, double mass)
+        {
+            // TODO make sure this is memory safe
             this->velocity = Point();
-            this->position = Point(x, y, z);
+            this->position = Point();
+            this->id = id;
+            this->mass = mass;
         };
 
         Particle()
@@ -39,6 +49,8 @@ struct Particle
             // TODO make sure this is memory safe
             this->velocity = Point();
             this->position = Point();
+            this->id = 0;
+            this->mass = 0;
         };
 
         void advect(double timestep)
@@ -58,5 +70,6 @@ struct Particle
         Point velocity;
         Point position;
 
+        int id;
         double mass;
 };

@@ -4,6 +4,10 @@
 
 #include "grid.hpp"
 
+#define DEBUG 1
+
+#define PARTICLE_MASS 1.0
+
 static Point GRAVITY = Point(0.0f, -9.8f, 0.0f);
 
 class Fluid
@@ -24,9 +28,14 @@ class Fluid
             {
                 for (int col_idx=0; col_idx<SQRT_NUM_PARTICLES; col_idx++)
                 {
-                    double x = width*row_idx/SQRT_NUM_PARTICLES;
-                    double y = width*col_idx/SQRT_NUM_PARTICLES;
-                    this->particles[row_idx*SQRT_NUM_PARTICLES+col_idx] = Particle(x, y, 0.0f);
+                    double x = width*(row_idx+0.5)/SQRT_NUM_PARTICLES;
+                    double y = height*(col_idx+0.5)/SQRT_NUM_PARTICLES;
+
+                    Point pose = Point(x, y, 0.0f);
+                    Point vel = Point();
+
+                    size_t particle_idx = row_idx * SQRT_NUM_PARTICLES + col_idx;
+                    this->particles[particle_idx] = Particle(particle_idx, pose, vel, PARTICLE_MASS);
                 }
             }
         };
@@ -36,6 +45,7 @@ class Fluid
         void run();
         void timestep();
         void display_particles();
+        void print_particles();
 
     private:
         Grid *grid;
@@ -49,6 +59,8 @@ class Fluid
 
         void advection(double timestep);
         void external_forces(double timestep);
+
+        // size_t get_particle_idx(int row_idx, int col_idx){};
 
         // for displaying a 2D slice
         cv::Mat display;

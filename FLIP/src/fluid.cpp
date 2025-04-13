@@ -16,17 +16,27 @@ void Fluid::run()
         // display a frame (for now just in 2D)
         this->display_particles();
 
+        #ifndef DEBUG
         if(cv::waitKey(1)>0) break;
+        #endif
+        #ifdef DEBUG
+        cv::waitKey(0); // frame by frame for debugging
+        #endif
     }
 }
 
 void Fluid::timestep()
 {
+    // set dt to just be a constant for debugging
+    #ifdef DEBUG
+    double dt = 0.001;
+    #endif
+    #ifndef DEBUG
     auto now = std::chrono::high_resolution_clock::now();
     double dt = std::chrono::duration<double>(now - this->prev_timestep).count();
-
     // update the time
     this->prev_timestep = now;
+    #endif
 
     // iterate through
     this->advection(dt);
@@ -35,6 +45,12 @@ void Fluid::timestep()
     // TODO -> add ghost pressures
     this->grid->solve_pressure();
     this->grid->transfer_from_grid(this->particles);
+
+    #ifdef DEBUG
+    this->print_particles();
+    this->grid->print_grid();
+    #endif
+
 }
 
 /*
@@ -71,8 +87,17 @@ void Fluid::display_particles()
     for(Particle p : this->particles)
     {
         // ensure inverting the height
-        cv::circle(this->display, cv::Point(p.position.x, this->height - p.position.y), 1, cv::Scalar(0, 0, 255), 1);
+        cv::circle(this->display, cv::Point(p.position.x, this->height - p.position.y), 5, cv::Scalar(0, 0, 255), 1);
     }
 
     cv::imshow("Fluid Sim Slice", this->display);
+}
+
+void Fluid::print_particles()
+{
+    for(Particle p : this->particles)
+    {
+        printf("Particle %d at (%f, %f)\n", p.id, p.position.x, p.position.y);
+        printf("uv: (%f, %f)\n", p.velocity.x, p.velocity.y);
+    }
 }
