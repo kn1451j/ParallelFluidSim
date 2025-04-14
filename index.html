@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Particle Fluid Simulation</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -8,50 +11,100 @@
             padding: 0;
             color: #333;
         }
+
         header {
             background-color: #2c3e50;
             color: #fff;
             padding: 20px;
             text-align: center;
         }
+
         header h1 {
             margin: 0;
+            font-size: 24px;
         }
+
+        header h3 {
+            margin: 5px 0 0 0;
+            font-weight: normal;
+            font-size: 16px;
+        }
+
         nav {
             background-color: #34495e;
             padding: 10px;
             text-align: center;
         }
+
         nav a {
             color: #fff;
             text-decoration: none;
             padding: 10px 20px;
             margin: 0 15px;
+            font-weight: bold;
         }
+
         nav a:hover {
             background-color: #1abc9c;
+            border-radius: 5px;
         }
+
+        main {
+            padding: 30px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
         section {
-            padding: 20px;
+            margin-bottom: 40px;
         }
-        .project-description, .goal, .methodology, .results {
-            margin-bottom: 30px;
+
+        h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
         }
+
+        ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+
+        ul li {
+            margin-bottom: 10px;
+        }
+
+        a {
+            color: #2980b9;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .video-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .video-container video{
+            height: 360px;
+            width: auto;
+        }
+
         footer {
             background-color: #2c3e50;
             color: #fff;
             text-align: center;
             padding: 15px;
-            position: relative;
-            bottom: 0;
-            width: 100%;
         }
-        .image-container {
-            text-align: center;
-        }
-        .simulation-img {
-            max-width: 100%;
-            height: auto;
+
+        .pdf-embed {
+            border: 1px solid #ccc;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -63,20 +116,66 @@
 </header>
 
 <nav>
-    <a href="#description">Project Description</a>
     <a href="#goal">Project Goal</a>
-    <a href="#methodology">Methodology</a>
+    <a href="#pdf-section">Project Plan</a>
+    <a href="#methodology">Progress</a>
     <a href="#results">Results</a>
-    <a href="#pdf-section">Project Report</a> <!-- Link to the new PDF section -->
 </nav>
 
-<!-- Other sections like Description, Goal, etc. -->
+<main>
+    <section id="goal">
+        <h3>Project Goal</h3>
+        <p>
+            This project explores a parallel, highly optimized hybrid Lagrangian/Eulerian
+            fluid simulation, focusing on real-time performance. We investigate both
+            the established Fluid Implicit Particle (FLIP) method and the more recent
+            Affine Particle-In-Cell (APIC) technique that addresses FLIP's instabilities.
+        </p>
+    </section>
 
-<section id="pdf-section">
-    <embed src="./ProjectPlan.pdf" width="100%" height="600px">
-</section>
+    <section id="pdf-section">
+        <h3>Project Plan</h3>
+        <div class="pdf-embed">
+            <embed src="./media/ProjectPlan.pdf" width="100%" height="600px" type="application/pdf">
+        </div>
+    </section>
 
-<footer></footer>
+    <section id="methodology">
+        <h3>Progress Updates</h3>
+        <p>
+            Here, we keep a log of weekly progress throughout the project:
+        </p>
+
+        <p>
+            <strong>Week One:</strong><br>
+            Created a 2D particle simulator framework (with potential for 3D expansion). Implemented particle advection and a sparse grid structure. Literature reviewed:
+        </p>
+
+        <ul>
+            <li><a href="https://www.youtube.com/watch?v=VddQZH_Ppd0" target="_blank">Physics-based Particle Simulation Lecture</a></li>
+            <li><a href="https://pdf.sciencedirectassets.com/... (shortened link)" target="_blank">FLIP: A Method for Adaptively Zoned, Particle-in-Cell Calculations</a></li>
+            <li><a href="https://github.com/mordak42/fluid-simulation/blob/master/doc/Fluid%20Simulation%20for%20Computer%20Graphics%2C%20Second%20Edition.pdf" target="_blank">Fluid Simulation for Computer Graphics (2nd Ed)</a></li>
+            <li><a href="https://github.com/lukedan/libfluid/tree/master" target="_blank">Example Particle Simulation Implementation (GitHub)</a></li>
+        </ul>
+
+        <p><strong>Example Run:</strong></p>
+        <div class="video-container">
+            <video controls>
+                <source src="media/initparticle.mov" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </section>
+
+    <section id="results">
+        <h3>Results</h3>
+        <p>Coming soon...</p>
+    </section>
+</main>
+
+<footer>
+   
+</footer>
 
 </body>
 </html>
