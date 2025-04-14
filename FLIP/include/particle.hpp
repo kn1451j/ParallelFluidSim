@@ -26,6 +26,11 @@ struct Point
     {
         return abs(x - p1.x) + abs(y - p1.y) + abs(z - p1.z);
     }
+
+    double bilinear(Point p1)
+    {
+        return abs(x - p1.x)*abs(y - p1.y);
+    }
 };
 
 struct Particle

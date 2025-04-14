@@ -11,11 +11,14 @@
 
 #define EPS 0.000001
 
+#define PIC_WEIGHT 0.9
+
 typedef std::pair<size_t, size_t> grid_idx_t;
 
 // typedef Eigen::Matrix< double, 4, 5 > Matrix45d;
 
 enum CELL_TYPE {FLUID, SOLID, GAS};
+enum VELOCITY {HORIZONTAL, VERTICAL};
 
 struct Cell
 {
@@ -25,7 +28,8 @@ struct Cell
 struct Vertex
 {
     double value;
-    void zero () {
+    void reset () {
+        this->prev_value = this->value;
         this->value = 0; 
         this->normalization = 0;
     };
@@ -36,10 +40,18 @@ struct Vertex
 
     // used for computing particle to grid interpolation
     double normalization;
-    // std::set<size_t> neighbor_particles {};
+    
+    // used for flip velocity change
+    double prev_value;
 
     Point position;
 };
+
+struct Neighbors
+{
+    VELOCITY type;
+    grid_idx_t neighbors[4];
+}
 
 // Staggered Grid class for maintaining grid physics system
 class Grid
@@ -62,6 +74,9 @@ class Grid
         void solve_pressure();
 
         grid_idx_t get_grid_idx(Particle p);
+
+        Neighbors get_horizontal_neighbors(Particle p);
+        Neighbors get_vertical_neighbors(Particle p);
 
         // change for this for cache optimiality
         Vertex pressure_grid[ROW_NUM][COL_NUM] {};
