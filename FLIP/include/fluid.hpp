@@ -26,8 +26,8 @@ class Fluid
             {
                 for (int col_idx=0; col_idx<SQRT_NUM_PARTICLES; col_idx++)
                 {
-                    double x = width*(row_idx+0.5)/SQRT_NUM_PARTICLES;
-                    double y = height*(col_idx+0.5)/SQRT_NUM_PARTICLES;
+                    double x = width*(col_idx+0.5)/SQRT_NUM_PARTICLES;
+                    double y = height*(row_idx+0.5)/SQRT_NUM_PARTICLES;
 
                     Point pose = Point(x, y, 0.0f);
                     Point vel = Point();

@@ -29,7 +29,7 @@ void Fluid::timestep()
 {
     // set dt to just be a constant for debugging
     #ifdef DEBUG
-    double dt = 0.001;
+    double dt = 0.1;
     #endif
     #ifndef DEBUG
     auto now = std::chrono::high_resolution_clock::now();
@@ -41,7 +41,13 @@ void Fluid::timestep()
     // iterate through
     this->advection(dt);
     this->external_forces(dt);
+
+    // this->print_particles();
+
     this->grid->transfer_to_grid(this->particles);
+
+    // this->grid->print_grid();
+
     // TODO -> add ghost pressures
     this->grid->solve_pressure();
     this->grid->transfer_from_grid(this->particles);
@@ -89,6 +95,19 @@ void Fluid::external_forces(double timestep)
 void Fluid::display_particles()
 {
     this->display = cv::Mat(this->width, this->height, CV_8UC3, cv::Scalar(0, 0, 0));
+
+    // highlights grid based on density
+    for(size_t row_idx = 0; row_idx<ROW_NUM; row_idx++)
+    {
+        for(size_t col_idx = 0; col_idx<COL_NUM; col_idx++)
+        {
+            Cell cell = this->grid->cells[row_idx][col_idx];
+
+            cv::rectangle(this->display, cv::Point(cell.position.x - this->grid->cell_width/2, cell.position.y - this->grid->cell_height/2), 
+                cv::Point(cell.position.x + this->grid->cell_width/2, cell.position.y + this->grid->cell_height/2), 
+                cv::Scalar(cell.density*this->grid->cell_volume*255, 0, 0), cv::FILLED);
+        }
+    }
 
     for(Particle p : this->particles)
     {

@@ -13,7 +13,7 @@
 
 #define EPS 0.000001
 
-#define PIC_WEIGHT 0.9
+#define PIC_WEIGHT 1
 
 // -1 can indicate that we're in "solid" region
 typedef std::pair<int, int> grid_idx_t;
@@ -21,19 +21,24 @@ typedef std::pair<int, int> grid_idx_t;
 // typedef Eigen::Matrix< double, 4, 5 > Matrix45d;
 
 enum CELL_TYPE {FLUID, SOLID, GAS};
-enum VELOCITY {HORIZONTAL, VERTICAL};
+enum VELOCITY {HORIZONTAL, VERTICAL, CELL};
 
 
 // TODO -> fix mass weighting
 struct Cell
 {
     CELL_TYPE type = GAS;
-    double mass = 0.0;
+
+    // for density convolution
+    Point position;
+    double density = 0.0;
+    double normalization = 0.0;
 
     void reset () {
         this->type = GAS;
-        this->mass = 0.0;
-    }
+        this->density = 0.0;
+        this->normalization = 0.0;
+    };
 };
 
 struct Vertex
@@ -90,6 +95,7 @@ class Grid
 
         Neighbors get_horizontal_neighbors(Particle p);
         Neighbors get_vertical_neighbors(Particle p);
+        Neighbors get_cell_neighbors(Particle p);
 
         // change for this for cache optimiality
         Vertex pressure_grid[ROW_NUM][COL_NUM] {};
@@ -102,6 +108,7 @@ class Grid
 
         double cell_width;
         double cell_height;
+        double cell_volume;
 
         void print_grid();
 

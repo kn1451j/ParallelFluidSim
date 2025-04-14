@@ -1,3 +1,5 @@
+#include <sstream>
+#include <string>
 
 #define NUM_PARTICLES 4
 #define SQRT_NUM_PARTICLES 2
@@ -23,16 +25,24 @@ struct Point
     double z;
 
     // todo -> fix this to be bounded within cell size
-    double ngp_distance(Point p1)
+    double ngp_distance(Point p1, double width, double height)
     {
-        return abs(x - p1.x) + abs(y - p1.y) + abs(z - p1.z);
+        // printf("p1.x: %f, p1.y: %f\n", p1.x, p1.y);
+        // printf("p2.x: %f, p2.y: %f\n", x, y);
+        return abs(x - p1.x)<=width/2 && abs(y - p1.y)<=height/2 ? 1 : 0;
     }
 
     // TODO -> this is not right (1 - (x - xi))
-    double bilinear(Point p1)
+    double bilinear(Point p1, double width, double height)
     {
-        return abs(x - p1.x)*abs(y - p1.y);
+        return (1 - abs(x - p1.x)/width)*(1 - abs(y - p1.y)/height);
     }
+
+    std::string print() {
+        std::stringstream ss;
+        ss << "p.x "<<this->x<<", p.y "<< this->y<<"\n";
+        return ss.str();
+    };
 };
 
 struct Particle
@@ -78,6 +88,8 @@ struct Particle
             this->velocity.y += timestep*force.y;
             this->velocity.z += timestep*force.z;
         }
+
+        std::string print() {return position.print();};
 
         Point velocity;
         Point position;
