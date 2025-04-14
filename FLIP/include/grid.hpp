@@ -1,5 +1,5 @@
 #include <vector>
-#include <tuple>
+#include <utility>
 #include <set>
 
 #include "particle.hpp"
@@ -9,7 +9,9 @@
 #define ROW_NUM 4
 #define COL_NUM 4
 
-typedef std::tuple<size_t, size_t> grid_idx_t;
+#define EPS 0.000001
+
+typedef std::pair<size_t, size_t> grid_idx_t;
 
 // typedef Eigen::Matrix< double, 4, 5 > Matrix45d;
 
@@ -23,12 +25,20 @@ struct Cell
 struct Vertex
 {
     double value;
-    void zero () {this->value = 0;};
-    void set(double value) {this->value = value;};
+    void zero () {
+        this->value = 0; 
+        this->normalization = 0;
+    };
+
+    void set(double value) {
+        this->value = value;
+    };
 
     // used for computing particle to grid interpolation
     double normalization;
-    std::set<size_t> neighbor_particles {};
+    // std::set<size_t> neighbor_particles {};
+
+    Point position;
 };
 
 // Staggered Grid class for maintaining grid physics system
@@ -42,14 +52,7 @@ class Grid
     */
     public:
         // makes a staggered grid with ROW_NUM rows and COL_NUM cols
-        Grid(double width, double height){
-            this->width = width;
-            this->height = height;
-            this->cell_width = width/COL_NUM;
-            this->cell_height = height/ROW_NUM;
-
-            this->A = new SparseMatrix(ROW_NUM, COL_NUM);
-        };
+        Grid(double width, double height);
 
         // exclusive owners of A
         ~Grid() {delete this->A;};
@@ -58,12 +61,12 @@ class Grid
         void transfer_from_grid(std::vector<Particle>& particles);
         void solve_pressure();
 
-        grid_idx_t get_particle_idx(Particle p);
+        grid_idx_t get_grid_idx(Particle p);
 
         // change for this for cache optimiality
         Vertex pressure_grid[ROW_NUM][COL_NUM] {};
-        Vertex horizontal_velocity[ROW_NUM][2*COL_NUM] {};
-        Vertex vertical_velocity[2*ROW_NUM][COL_NUM] {};
+        Vertex horizontal_velocity[ROW_NUM][COL_NUM+1] {};
+        Vertex vertical_velocity[ROW_NUM+1][COL_NUM] {};
         Cell cells[ROW_NUM][COL_NUM] {};
 
         double width;

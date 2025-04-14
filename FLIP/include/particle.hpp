@@ -21,6 +21,11 @@ struct Point
     double x;
     double y;
     double z;
+
+    double l1_distance(Point p1)
+    {
+        return abs(x - p1.x) + abs(y - p1.y) + abs(z - p1.z);
+    }
 };
 
 struct Particle
