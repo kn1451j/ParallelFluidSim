@@ -1,4 +1,5 @@
 #include <string.h>
+#include <cassert>
 #include "grid.hpp"
 
 
@@ -35,21 +36,45 @@ Grid::Grid(double width, double height){
 
 grid_idx_t Grid::get_grid_idx(Particle p)
 {
-    return std::pair<size_t, size_t>(
-        static_cast<size_t>(p.position.x/this->cell_width), 
-        static_cast<size_t>(p.position.y/this->cell_height)
+    return std::pair<int, int>(
+        static_cast<int>(p.position.x/this->cell_width), 
+        static_cast<int>(p.position.y/this->cell_height)
     );
 }
 
 // returns the 4 horizontal velocity vertex indices bounding the particle
-Neighbors get_horizontal_neighbors(Particle p)
+Neighbors Grid::get_horizontal_neighbors(Particle p)
 {
-    // TODO
+    int col_idx = static_cast<int>((p.position.x-0.5)/this->cell_width);
+    int row_idx = static_cast<int>((p.position.y)/this->cell_height);
+
+    Neighbors n {};
+    n.type = HORIZONTAL;
+
+    // we dont check the value for negativity here, since negative implies solid boundary -> info we might need
+    n.neighbors[0] = std::pair<int, int>(col_idx, row_idx);
+    n.neighbors[1] = std::pair<int, int>(col_idx, row_idx+1);
+    n.neighbors[2] = std::pair<int, int>(col_idx+1, row_idx);
+    n.neighbors[3] = std::pair<int, int>(col_idx+1, row_idx+1);
+
+    return n;
 }
 
-Neighbors get_vertical_neighbors(Particle p)
+Neighbors Grid::get_vertical_neighbors(Particle p)
 {
-    // TODO
+    int col_idx = static_cast<int>((p.position.x)/this->cell_width);
+    int row_idx = static_cast<int>((p.position.y-0.5)/this->cell_height);
+
+    Neighbors n {};
+    n.type = VERTICAL;
+
+    // we dont check the value for negativity here, since negative implies solid boundary -> info we might need
+    n.neighbors[0] = std::pair<int, int>(col_idx, row_idx);
+    n.neighbors[1] = std::pair<int, int>(col_idx, row_idx+1);
+    n.neighbors[2] = std::pair<int, int>(col_idx+1, row_idx);
+    n.neighbors[3] = std::pair<int, int>(col_idx+1, row_idx+1);
+
+    return n;
 }
 
 /*
@@ -67,7 +92,7 @@ void Grid::transfer_to_grid(std::vector<Particle>& particles)
             //     this->cells[row_idx][col_idx].type = SOLID;
             // else
                 
-            this->cells[row_idx][col_idx].type = GAS;
+            this->cells[row_idx][col_idx].reset();
             this->pressure_grid[row_idx][col_idx].reset();
             this->horizontal_velocity[row_idx][col_idx].reset();
             this->vertical_velocity[row_idx][col_idx].reset();
@@ -85,27 +110,41 @@ void Grid::transfer_to_grid(std::vector<Particle>& particles)
 
     // interpolate particles based on grid location -> weighted average of particles based on distance from vertex (normalized)
     for(Particle p : particles){
-        // get the neighboring cells
+        // at least one particle in cell -> the cell becomes fluid
         auto cell_idx = this->get_grid_idx(p);
 
         this->cells[cell_idx.first][cell_idx.second].type = FLUID;
 
+        // get the neighboring cells
         Neighbors nh = this->get_horizontal_neighbors(p);
         for(grid_idx_t cell_idx : nh.neighbors){
+            // check if neighbor is border. if so, do nothing -> this will be a solid cell
+            if(cell_idx.first < 0) continue;
+
+            #ifdef DEBUG
+            assert(cell_idx.second >= 0);
+            #endif
+
             Vertex& ui0 = this->horizontal_velocity[cell_idx.first][cell_idx.second];
 
-            // then we want to linearly interpolate velocity and apply a particle mass weighting
             // then we set horizontal and vertical velocities based off of this for each grid vertex
-            ui0.value += p.velocity.x * p.position.l1_distance(ui0.position); // TODO -> should this be bilinear? just 4 closest neighbors?
-            ui0.normalization += p.position.l1_distance(ui0.position);
+            ui0.value += p.velocity.x * p.position.ngp_distance(ui0.position); // TODO -> should this be bilinear? just 4 closest neighbors?
+            ui0.normalization += p.position.ngp_distance(ui0.position);
         }
 
         // do the same for vertical
         Neighbors nv = this->get_vertical_neighbors(p);
         for(grid_idx_t cell_idx : nv.neighbors){
+            // check if neighbor is border. if so, do nothing -> this will be a solid cell
+            if(cell_idx.second < 0) continue;
+
+            #ifdef DEBUG
+            assert(cell_idx.first >= 0);
+            #endif
+
             Vertex& vi0 = this->vertical_velocity[cell_idx.first][cell_idx.second];
-            vi0.value += p.velocity.y * p.position.l1_distance(vi0.position);
-            vi0.normalization += p.position.l1_distance(vi0.position);
+            vi0.value += p.velocity.y * p.position.ngp_distance(vi0.position);
+            vi0.normalization += p.position.ngp_distance(vi0.position);
         }
     }
 

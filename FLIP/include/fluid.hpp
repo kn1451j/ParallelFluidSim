@@ -4,8 +4,6 @@
 
 #include "grid.hpp"
 
-#define DEBUG 1
-
 #define PARTICLE_MASS 1.0
 
 static Point GRAVITY = Point(0.0f, -9.8f, 0.0f);

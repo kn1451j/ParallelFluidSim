@@ -5,6 +5,8 @@
 #include "particle.hpp"
 #include "sparse_matrix.hpp"
 
+#define DEBUG 1
+
 // Grid coarsness
 #define ROW_NUM 4
 #define COL_NUM 4
@@ -13,16 +15,25 @@
 
 #define PIC_WEIGHT 0.9
 
-typedef std::pair<size_t, size_t> grid_idx_t;
+// -1 can indicate that we're in "solid" region
+typedef std::pair<int, int> grid_idx_t;
 
 // typedef Eigen::Matrix< double, 4, 5 > Matrix45d;
 
 enum CELL_TYPE {FLUID, SOLID, GAS};
 enum VELOCITY {HORIZONTAL, VERTICAL};
 
+
+// TODO -> fix mass weighting
 struct Cell
 {
     CELL_TYPE type = GAS;
+    double mass = 0.0;
+
+    void reset () {
+        this->type = GAS;
+        this->mass = 0.0;
+    }
 };
 
 struct Vertex
@@ -50,8 +61,10 @@ struct Vertex
 struct Neighbors
 {
     VELOCITY type;
+    
+    // order: top left, top right, bottom right, bottom left
     grid_idx_t neighbors[4];
-}
+};
 
 // Staggered Grid class for maintaining grid physics system
 class Grid

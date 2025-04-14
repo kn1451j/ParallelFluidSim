@@ -61,7 +61,13 @@ void Fluid::advection(double timestep)
 {
     for(Particle &p : this->particles)
     {
+        // advect
         p.advect(timestep);
+
+        // clamp particle position to screen
+        p.position.x = std::clamp(p.position.x, 0.0, this->width);
+        p.position.y = std::clamp(p.position.y, 0.0, this->height);
+        // add z
     }
 }
 

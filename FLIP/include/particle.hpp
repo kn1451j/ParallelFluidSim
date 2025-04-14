@@ -22,11 +22,13 @@ struct Point
     double y;
     double z;
 
-    double l1_distance(Point p1)
+    // todo -> fix this to be bounded within cell size
+    double ngp_distance(Point p1)
     {
         return abs(x - p1.x) + abs(y - p1.y) + abs(z - p1.z);
     }
 
+    // TODO -> this is not right (1 - (x - xi))
     double bilinear(Point p1)
     {
         return abs(x - p1.x)*abs(y - p1.y);
