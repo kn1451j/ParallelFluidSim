@@ -48,7 +48,7 @@ struct Point
     // TODO -> this is not right (1 - (x - xi))
     double bilinear(Point p1, double width, double height)
     {
-        return (1 - abs(x - p1.x)/width)*(1 - abs(y - p1.y)/height);
+        return (1.0 - abs(this->x - p1.x)/width)*(1.0 - abs(this->y - p1.y)/height);
     }
 
     std::string print() {

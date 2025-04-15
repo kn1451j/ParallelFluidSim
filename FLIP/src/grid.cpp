@@ -47,6 +47,8 @@ Grid::Grid(double width, double height){
     }
 
     this->A = new SparseMatrix(ROW_NUM, COL_NUM);
+
+    // printf(this->cells[0][0].position.print().c_str());
 };
 
 // returns -> [row_idx, col_idx]
@@ -130,28 +132,22 @@ void Grid::transfer_to_grid(std::vector<Particle>& particles)
             this->pressure_grid[row_idx][col_idx].reset();
             this->horizontal_velocity[row_idx][col_idx].reset();
             this->vertical_velocity[row_idx][col_idx].reset();
+
+            // printf("(%d, %d): %f\n ", row_idx, col_idx, this->cells[row_idx][col_idx].density);
         }
 
         // update horizontal velocity for every column
         this->horizontal_velocity[row_idx][COL_NUM].reset();
     }
-
+    
     for(size_t col_idx = 0; col_idx<COL_NUM; col_idx++)
     { 
         this->vertical_velocity[ROW_NUM][col_idx].reset();
     }
 
-
     // interpolate particles based on grid location -> weighted average of particles based on distance from vertex (normalized)
     for(Particle p : particles){
-        // printf("particle pos: %s\n", p.print().c_str());
-
-        auto cell_idx = this->get_grid_idx(p);
-        Cell cell = this->cells[cell_idx.first][cell_idx.second];
-        // printf("cell (%d, %d)\n", cell_idx.first, cell_idx.second);
-
         // at least one particle in cell -> the cell becomes fluid
-        cell.type = FLUID;
         // DENSITY CALCULATED LATER
 
         // get the neighboring horizontal velocity cells
@@ -159,7 +155,7 @@ void Grid::transfer_to_grid(std::vector<Particle>& particles)
         for(grid_idx_t cell_idx : nh.neighbors){
             // printf("cell (%d, %d)\n", cell_idx.first, cell_idx.second);
             // check if neighbor is border. if so, do nothing -> this will be a solid cell
-            if(cell_idx.first < 0 || cell_idx.first >= ROW_NUM) continue;
+            if(!this->_valid_cell(cell_idx)) continue;
 
             #ifdef DEBUG
             assert(cell_idx.second >= 0 && cell_idx.second <= COL_NUM);
@@ -168,40 +164,44 @@ void Grid::transfer_to_grid(std::vector<Particle>& particles)
             Vertex& ui0 = this->horizontal_velocity[cell_idx.first][cell_idx.second];
 
             // then we set horizontal and vertical velocities based off of this for each grid vertex
-            ui0.value += p.mass * p.velocity.x * p.position.bilinear(ui0.position, this->cell_width, this->cell_height); // TODO -> should this be bilinear? just 4 closest neighbors?
-            // ui0.normalization += p.position.bilinear(ui0.position, this->cell_width, this->cell_height); // TODO -> normalize per particles
-            ui0.normalization += p.mass;
+            double dist = p.position.bilinear(ui0.position, this->cell_width, this->cell_height);
+            ui0.value += p.mass * p.velocity.x * dist; // TODO -> should this be bilinear? just 4 closest neighbors?
+            ui0.normalization += dist; // TODO -> normalize per particles
         }
 
         // do the same for vertical
         Neighbors nv = this->get_vertical_neighbors(p);
         for(grid_idx_t cell_idx : nv.neighbors){
             // check if neighbor is border. if so, do nothing -> this will be a solid cell
-            if(cell_idx.second < 0 || cell_idx.second >= COL_NUM) continue;
+            if(!this->_valid_cell(cell_idx)) continue;
 
             #ifdef DEBUG
             assert(cell_idx.first >= 0 && cell_idx.first <= ROW_NUM);
             #endif
 
             Vertex& vi0 = this->vertical_velocity[cell_idx.first][cell_idx.second];
-            vi0.value += p.mass * p.velocity.y * p.position.bilinear(vi0.position, this->cell_width, this->cell_height);
-
-            // printf("dist: %f", p.position.ngp_distance(vi0.position, this->cell_width, this->cell_height));
-
-            // printf("vi.value: %f\n", vi0.value);
-            // vi0.normalization += p.position.bilinear(vi0.position, this->cell_width, this->cell_height);
-            vi0.normalization += p.mass;
+            double dist =  p.position.bilinear(vi0.position, this->cell_width, this->cell_height);
+            vi0.value += p.mass * p.velocity.y * dist;
+            vi0.normalization += dist;
+            // vi0.normalization += p.mass;
         }
 
         // calculate density by interpolating
         Neighbors n = this->get_cell_neighbors(p);
         for(grid_idx_t cell_idx : n.neighbors){
             // check if neighbor is border. if so, do nothing -> this will be a solid cell (no density)
-            if(cell_idx.second < 0 || cell_idx.first < 0 || cell_idx.second >= COL_NUM || cell_idx.first >= ROW_NUM) continue;
+            if(!this->_valid_cell(cell_idx)) continue;
 
-            Cell& v = this->cells[cell_idx.first][cell_idx.second];
-            v.density += (p.mass/this->cell_volume) * p.position.bilinear(v.position, this->cell_width, this->cell_height);
-            // v.normalization += p.position.bilinear(v.position, this->cell_width, this->cell_height);
+            Cell& cell = this->cells[cell_idx.first][cell_idx.second];
+            cell.type = FLUID;
+
+            // printf("[%zu, %zu] (%f, %f):\n", cell_idx.first, cell_idx.second, v.position.x, v.position.y);
+            // printf("             (%f, %f):\n",  p.position.x, p.position.y);
+            // printf("%f\n", p.position.bilinear(v.position, this->cell_width, this->cell_height));
+            // assert(p.position.bilinear(cell.position, this->cell_width, this->cell_height) >= 0 &&  p.position.bilinear(cell.position, this->cell_width, this->cell_height) <= 1);
+            double dist = p.position.bilinear(cell.position, this->cell_width, this->cell_height);
+            cell.density += (p.mass/this->cell_volume) * dist;
+            cell.normalization += dist;
         }
     }
 
@@ -240,18 +240,33 @@ void Grid::transfer_from_grid(std::vector<Particle>& particles)
 
         // get the vertical and horizontal neighbors for each particle, bilinearly interpolate their velocity onto the particle
         Neighbors nh = this->get_horizontal_neighbors(p);
+        double velocity_norm = 0.0;
         for(grid_idx_t cell_idx : nh.neighbors){
+            if(!this->_fluid_cell(cell_idx)) continue;
+
             Vertex& u = this->horizontal_velocity[cell_idx.first][cell_idx.second];
-            p.velocity.x += PIC_WEIGHT * p.position.bilinear(u.position, this->cell_width, this->cell_height) * u.value; // PIC update
-            p.velocity.x += (1 - PIC_WEIGHT) * p.position.bilinear(u.position, this->cell_width, this->cell_height) * (u.value - u.prev_value); // FLIP update
+            double dist = p.position.bilinear(u.position, this->cell_width, this->cell_height);
+            p.velocity.x += PIC_WEIGHT * dist * u.value; // PIC update
+            p.velocity.x += (1 - PIC_WEIGHT) * dist * (u.value - u.prev_value); // FLIP update
+            velocity_norm += dist;
         }
 
+        // normalize
+        p.velocity.x /= velocity_norm;
+
         Neighbors nv = this->get_vertical_neighbors(p);
+        velocity_norm = 0.0;
         for(grid_idx_t cell_idx : nv.neighbors){
+            if(!this->_fluid_cell(cell_idx)) continue;
+
             Vertex& v = this->vertical_velocity[cell_idx.first][cell_idx.second];
-            p.velocity.y += PIC_WEIGHT * p.position.bilinear(v.position, this->cell_width, this->cell_height) * v.value; // PIC update
-            p.velocity.y += (1 - PIC_WEIGHT) * p.position.bilinear(v.position, this->cell_width, this->cell_height) * (v.value - v.prev_value); // FLIP update
+            double dist = p.position.bilinear(v.position, this->cell_width, this->cell_height);
+            p.velocity.y += PIC_WEIGHT * dist * v.value; // PIC update
+            p.velocity.y += (1 - PIC_WEIGHT) * dist * (v.value - v.prev_value); // FLIP update
+            velocity_norm += dist;
         }
+
+        p.velocity.y /= velocity_norm;
     }
 }
 

@@ -5,7 +5,7 @@
 #include "particle.hpp"
 #include "sparse_matrix.hpp"
 
-#define DEBUG 1
+#define DEBUG 0
 // #define REALTIME 1
 
 // Grid coarsness
@@ -44,7 +44,7 @@ struct Cell
 
 struct Vertex
 {
-    double value;
+    double value = 0.0;
     void reset () {
         this->prev_value = this->value;
         this->value = 0; 
@@ -56,12 +56,12 @@ struct Vertex
     };
 
     // used for computing particle to grid interpolation
-    double normalization;
+    double normalization = 0.0;
     
     // used for flip velocity change
-    double prev_value;
+    double prev_value = 0.0;
 
-    Point position;
+    Point position = Point();
 };
 
 struct Neighbors
@@ -142,4 +142,12 @@ class Grid
     private:
         SparseMatrix *A;
         
+        bool _valid_cell(grid_idx_t cell_idx) {
+            bool liquid_coord = (cell_idx.second >= 0 && cell_idx.first >= 0 && cell_idx.second < COL_NUM && cell_idx.first < ROW_NUM);
+            return liquid_coord;
+        }
+
+        bool _fluid_cell(grid_idx_t cell_idx){
+            return _valid_cell(cell_idx) && this->cells[cell_idx.first][cell_idx.second].type==FLUID;
+        }
 };
