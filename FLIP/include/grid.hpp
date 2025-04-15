@@ -6,6 +6,7 @@
 #include "sparse_matrix.hpp"
 
 #define DEBUG 1
+// #define REALTIME 1
 
 // Grid coarsness
 #define ROW_NUM 4
@@ -13,7 +14,7 @@
 
 #define EPS 0.000001
 
-#define PIC_WEIGHT 1
+#define PIC_WEIGHT 0.9
 
 // -1 can indicate that we're in "solid" region
 typedef std::pair<int, int> grid_idx_t;
@@ -97,7 +98,33 @@ class Grid
         Neighbors get_vertical_neighbors(Particle p);
         Neighbors get_cell_neighbors(Particle p);
 
-        // change for this for cache optimiality
+        /*
+
+            Position coordinate system:
+
+            [0][0]
+            ^ ------------------  [0][COL_NUM]
+            |                   |
+            |                   |
+            |                   |
+            .-------------------> [ROW_NUM][COL_NUM]
+            [ROW_NUM][0]
+
+            [row_idx][col_idx] -> (x, y) : 
+                x = col_idx * cell_width;
+                y = height - row_idx * cell_height
+
+            (x, y) -> [row_idx][col_idx] :
+                row_idx = x/cell_width
+                col_idx = (height - y)/cell_height
+            
+            idx [0][0] -> position (0, height)
+            idx [ROW_NUM][0] -> position (0, 0)
+            idx [0][COL_NUM] -> position (width, height)
+            idx [ROW_NUM][COL_NUM] -> position (width, 0)
+        */
+
+        // TODO change for this for cache optimiality
         Vertex pressure_grid[ROW_NUM][COL_NUM] {};
         Vertex horizontal_velocity[ROW_NUM][COL_NUM+1] {};
         Vertex vertical_velocity[ROW_NUM+1][COL_NUM] {};

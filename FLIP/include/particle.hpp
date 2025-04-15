@@ -1,8 +1,21 @@
 #include <sstream>
 #include <string>
 
-#define NUM_PARTICLES 4
-#define SQRT_NUM_PARTICLES 2
+#define NUM_PARTICLES 16
+#define SQRT_NUM_PARTICLES 4
+
+/*
+
+    Position coordinate system:
+
+    y - image height
+    ^
+    |
+    |                   image width
+    |                   |
+    .-----------------> x
+    (0, 0)
+*/
 
 struct Point
 {

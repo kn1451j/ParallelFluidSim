@@ -28,10 +28,10 @@ void Fluid::run()
 void Fluid::timestep()
 {
     // set dt to just be a constant for debugging
-    #ifdef DEBUG
-    double dt = 0.1;
+    #ifndef REALTIME 
+    double dt = 1.0;
     #endif
-    #ifndef DEBUG
+    #ifdef REALTIME
     auto now = std::chrono::high_resolution_clock::now();
     double dt = std::chrono::duration<double>(now - this->prev_timestep).count();
     // update the time
@@ -70,9 +70,9 @@ void Fluid::advection(double timestep)
         // advect
         p.advect(timestep);
 
-        // clamp particle position to screen
-        p.position.x = std::clamp(p.position.x, 0.0, this->width);
-        p.position.y = std::clamp(p.position.y, 0.0, this->height);
+        // clamp particle position to screen (TODO magic nums)
+        p.position.x = std::clamp(p.position.x, EPS, this->width-EPS);
+        p.position.y = std::clamp(p.position.y, EPS, this->height-EPS);
         // add z
     }
 }
@@ -103,8 +103,8 @@ void Fluid::display_particles()
         {
             Cell cell = this->grid->cells[row_idx][col_idx];
 
-            cv::rectangle(this->display, cv::Point(cell.position.x - this->grid->cell_width/2, cell.position.y - this->grid->cell_height/2), 
-                cv::Point(cell.position.x + this->grid->cell_width/2, cell.position.y + this->grid->cell_height/2), 
+            cv::rectangle(this->display, cv::Point(cell.position.x - this->grid->cell_width/2, this->height - (cell.position.y - this->grid->cell_height/2)), 
+                cv::Point(cell.position.x + this->grid->cell_width/2, this->height - (cell.position.y + this->grid->cell_height/2)), 
                 cv::Scalar(cell.density*this->grid->cell_volume*255, 0, 0), cv::FILLED);
         }
     }
