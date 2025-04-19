@@ -3,6 +3,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/fluid.dir/src/fluid.cpp.o.d"
   "CMakeFiles/fluid.dir/src/grid.cpp.o"
   "CMakeFiles/fluid.dir/src/grid.cpp.o.d"
+  "CMakeFiles/fluid.dir/src/pressure_solver.cpp.o"
+  "CMakeFiles/fluid.dir/src/pressure_solver.cpp.o.d"
   "libfluid.a"
   "libfluid.pdb"
 )

@@ -42,14 +42,14 @@ void Fluid::timestep()
     this->advection(dt);
     this->external_forces(dt);
 
-    // this->print_particles();
+    this->print_particles();
 
     this->grid->transfer_to_grid(this->particles);
 
-    // this->grid->print_grid();
+    this->grid->print_grid();
 
     // TODO -> add ghost pressures
-    this->grid->solve_pressure();
+    this->grid->solve_pressure(dt);
     this->grid->transfer_from_grid(this->particles);
 
     #ifdef DEBUG

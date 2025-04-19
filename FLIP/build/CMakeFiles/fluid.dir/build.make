@@ -100,19 +100,35 @@ CMakeFiles/fluid.dir/src/grid.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/fluid.dir/src/grid.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/src/grid.cpp -o CMakeFiles/fluid.dir/src/grid.cpp.s
 
+CMakeFiles/fluid.dir/src/pressure_solver.cpp.o: CMakeFiles/fluid.dir/flags.make
+CMakeFiles/fluid.dir/src/pressure_solver.cpp.o: /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/src/pressure_solver.cpp
+CMakeFiles/fluid.dir/src/pressure_solver.cpp.o: CMakeFiles/fluid.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/fluid.dir/src/pressure_solver.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/fluid.dir/src/pressure_solver.cpp.o -MF CMakeFiles/fluid.dir/src/pressure_solver.cpp.o.d -o CMakeFiles/fluid.dir/src/pressure_solver.cpp.o -c /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/src/pressure_solver.cpp
+
+CMakeFiles/fluid.dir/src/pressure_solver.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/fluid.dir/src/pressure_solver.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/src/pressure_solver.cpp > CMakeFiles/fluid.dir/src/pressure_solver.cpp.i
+
+CMakeFiles/fluid.dir/src/pressure_solver.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/fluid.dir/src/pressure_solver.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/src/pressure_solver.cpp -o CMakeFiles/fluid.dir/src/pressure_solver.cpp.s
+
 # Object files for target fluid
 fluid_OBJECTS = \
 "CMakeFiles/fluid.dir/src/fluid.cpp.o" \
-"CMakeFiles/fluid.dir/src/grid.cpp.o"
+"CMakeFiles/fluid.dir/src/grid.cpp.o" \
+"CMakeFiles/fluid.dir/src/pressure_solver.cpp.o"
 
 # External object files for target fluid
 fluid_EXTERNAL_OBJECTS =
 
 libfluid.a: CMakeFiles/fluid.dir/src/fluid.cpp.o
 libfluid.a: CMakeFiles/fluid.dir/src/grid.cpp.o
+libfluid.a: CMakeFiles/fluid.dir/src/pressure_solver.cpp.o
 libfluid.a: CMakeFiles/fluid.dir/build.make
 libfluid.a: CMakeFiles/fluid.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX static library libfluid.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX static library libfluid.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/fluid.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/fluid.dir/link.txt --verbose=$(VERBOSE)
 

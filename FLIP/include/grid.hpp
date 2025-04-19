@@ -1,9 +1,13 @@
 #include <vector>
 #include <utility>
 #include <set>
+#include <utility>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+#include <cmath>
 
 #include "particle.hpp"
-#include "sparse_matrix.hpp"
 
 #define DEBUG 0
 // #define REALTIME 1
@@ -15,6 +19,23 @@
 #define EPS 0.000001
 
 #define PIC_WEIGHT 0.9
+
+#define SPARSE_WIDTH 5
+#define TOL 0.0001
+#define MAX_ITER 100
+
+enum Direction {
+    LEFT = 0, 
+    RIGHT = 1, 
+    CENTER = 2,
+    TOP = 3, 
+    BOTTOM = 4
+};
+
+enum SolverType
+{
+    PCG
+};
 
 // -1 can indicate that we're in "solid" region
 typedef std::pair<int, int> grid_idx_t;
@@ -85,12 +106,12 @@ class Grid
         // makes a staggered grid with ROW_NUM rows and COL_NUM cols
         Grid(double width, double height);
 
-        // exclusive owners of A
-        ~Grid() {delete this->A;};
+        // exclusive owners of the pressure solver
+        ~Grid() {};
 
         void transfer_to_grid(std::vector<Particle>& particles);
         void transfer_from_grid(std::vector<Particle>& particles);
-        void solve_pressure();
+        void solve_pressure(double dt);
 
         grid_idx_t get_grid_idx(Particle p);
 
@@ -140,8 +161,8 @@ class Grid
         void print_grid();
 
     private:
-        SparseMatrix *A;
-        
+        void print_cell(grid_idx_t cell_idx) { printf("(%d, %d) \n", cell_idx.first, cell_idx.second);}
+
         bool _valid_cell(grid_idx_t cell_idx) {
             bool liquid_coord = (cell_idx.second >= 0 && cell_idx.first >= 0 && cell_idx.second < COL_NUM && cell_idx.first < ROW_NUM);
             return liquid_coord;
@@ -150,4 +171,70 @@ class Grid
         bool _fluid_cell(grid_idx_t cell_idx){
             return _valid_cell(cell_idx) && this->cells[cell_idx.first][cell_idx.second].type==FLUID;
         }
+
+        bool _air_cell(grid_idx_t cell_idx){
+            return _valid_cell(cell_idx) && this->cells[cell_idx.first][cell_idx.second].type==GAS;
+        }
+
+        grid_idx_t _lneighbor(grid_idx_t cell_idx){return {cell_idx.first, cell_idx.second - 1};}
+        grid_idx_t _rneighbor(grid_idx_t cell_idx){return {cell_idx.first, cell_idx.second + 1};}
+        grid_idx_t _tneighbor(grid_idx_t cell_idx){return {cell_idx.first - 1, cell_idx.second};}
+        grid_idx_t _bneighbor(grid_idx_t cell_idx){return {cell_idx.first + 1, cell_idx.second};}
+        int get_flat_idx(grid_idx_t idx) {return COL_NUM * idx.first + idx.second;}
+
+        /*
+        Helper functions for solving pressure equations
+        */
+        void set_dV_idx(grid_idx_t cell, double entry){
+            this->dV[this->get_flat_idx(cell)] = entry;
+        };
+
+        void add_to_dV(grid_idx_t cell, double entry){
+            this->dV[this->get_flat_idx(cell)] += entry;
+        };
+
+        void set_A_idx(grid_idx_t cell, Direction dir, double entry){
+            printf("setting %d to ", dir);
+            print_cell(cell);
+            printf("%d size %d\n", this->get_flat_idx(cell), this->sparseA[this->get_flat_idx(cell)].size());
+            this->sparseA[this->get_flat_idx(cell)][dir] = entry;
+            printf("set\n");
+        };
+
+        void add_to_A(grid_idx_t cell, Direction dir, double entry){
+            printf("adding %d to ", dir);
+            print_cell(cell);
+            this->sparseA[this->get_flat_idx(cell)][dir] += entry;
+            printf("added\n");
+        };
+
+        void reset(){
+            printf("resetting solver...\n");
+            printf("%d\n", this->dV.size());
+            for(int idx = 0; idx < this->dV.size(); idx++)
+                this->dV[idx] = 0.0;
+
+            printf("e...\n");
+
+            for(int idx = 0; idx < this->pVec.size(); idx++)
+                this->pVec[idx] = 0.0;
+            
+            for(std::vector<double>& vec : this->sparseA){
+                for(int idx = 0; idx < vec.size(); idx++)
+                    vec[idx] = 0.0;
+            }
+        };
+
+        // pressure components
+        std::vector<double> dV;
+        // WARNING -> right now, because we only store sparseA as a NUM_CELLS x 5 length matrix, its not spatially correct
+        std::vector<std::vector<double>> sparseA;
+        std::vector<double> pVec;
+        std::vector<double> diagE;
+
+        // methods for solving PCG
+        std::vector<double> apply_preconditioner(std::vector<double> res);
+        std::vector<double> apply_A(std::vector<double> search);
+        void build_preconditioner();
+        bool solve_with_PCG();
 };

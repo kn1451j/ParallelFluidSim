@@ -17,6 +17,7 @@ target_include_directories(fluid
 target_sources(fluid
 	PRIVATE
 		"src/fluid.cpp"
-		"src/grid.cpp")
+		"src/grid.cpp"
+		"src/pressure_solver.cpp")
 
 target_link_libraries(run ${OpenCV_LIBS} fluid)

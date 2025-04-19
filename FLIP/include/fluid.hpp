@@ -38,7 +38,9 @@ class Fluid
             }
         };
 
-        ~Fluid(){delete this->grid;};
+        ~Fluid(){
+            delete this->grid;
+        };
 
         void run();
         void timestep();
