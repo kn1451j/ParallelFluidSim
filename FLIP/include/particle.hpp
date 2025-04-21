@@ -1,8 +1,8 @@
 #include <sstream>
 #include <string>
 
-#define NUM_PARTICLES 16
-#define SQRT_NUM_PARTICLES 4
+#define NUM_PARTICLES 1024
+#define SQRT_NUM_PARTICLES 32
 
 /*
 

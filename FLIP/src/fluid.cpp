@@ -29,7 +29,7 @@ void Fluid::timestep()
 {
     // set dt to just be a constant for debugging
     #ifndef REALTIME 
-    double dt = 1.0;
+    double dt = 0.1;
     #endif
     #ifdef REALTIME
     auto now = std::chrono::high_resolution_clock::now();
@@ -42,11 +42,11 @@ void Fluid::timestep()
     this->advection(dt);
     this->external_forces(dt);
 
-    this->print_particles();
+    // this->print_particles();
 
     this->grid->transfer_to_grid(this->particles);
 
-    this->grid->print_grid();
+    // this->grid->print_grid();
 
     // TODO -> add ghost pressures
     this->grid->solve_pressure(dt);

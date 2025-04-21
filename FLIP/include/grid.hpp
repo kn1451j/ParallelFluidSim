@@ -9,14 +9,14 @@
 
 #include "particle.hpp"
 
-#define DEBUG 0
+// #define DEBUG
 // #define REALTIME 1
 
 // Grid coarsness
-#define ROW_NUM 4
-#define COL_NUM 4
+#define ROW_NUM 500
+#define COL_NUM 500
 
-#define EPS 0.000001
+#define EPS 0.0001
 
 #define PIC_WEIGHT 0.9
 
@@ -194,30 +194,28 @@ class Grid
         };
 
         void set_A_idx(grid_idx_t cell, Direction dir, double entry){
-            printf("setting %d to ", dir);
-            print_cell(cell);
-            printf("%d size %d\n", this->get_flat_idx(cell), this->sparseA[this->get_flat_idx(cell)].size());
+            // printf("setting %d to ", dir);
+            // print_cell(cell);
+            // printf("%d size %d\n", this->get_flat_idx(cell), this->sparseA[this->get_flat_idx(cell)].size());
             this->sparseA[this->get_flat_idx(cell)][dir] = entry;
-            printf("set\n");
         };
 
         void add_to_A(grid_idx_t cell, Direction dir, double entry){
-            printf("adding %d to ", dir);
-            print_cell(cell);
+            // print_cell(cell);
             this->sparseA[this->get_flat_idx(cell)][dir] += entry;
-            printf("added\n");
         };
 
         void reset(){
-            printf("resetting solver...\n");
-            printf("%d\n", this->dV.size());
+            // printf("resetting solver...\n");
             for(int idx = 0; idx < this->dV.size(); idx++)
                 this->dV[idx] = 0.0;
 
-            printf("e...\n");
-
             for(int idx = 0; idx < this->pVec.size(); idx++)
                 this->pVec[idx] = 0.0;
+        
+
+            for(int idx = 0; idx < this->diagE.size(); idx++)
+                this->diagE[idx] = 0.0;
             
             for(std::vector<double>& vec : this->sparseA){
                 for(int idx = 0; idx < vec.size(); idx++)

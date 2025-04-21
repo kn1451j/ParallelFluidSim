@@ -282,12 +282,11 @@ void Grid::transfer_from_grid(std::vector<Particle>& particles)
 */
 void Grid::solve_pressure(double dt)
 {
-    printf("here\n");
 
     // reset the pressure solver each time
     this->reset();
 
-    printf("reset solver\n");
+    // printf("reset solver\n");
 
     // populate right hand-side divergence of current velocity field
     for (int row_idx = 0; row_idx < ROW_NUM; row_idx ++)
@@ -295,18 +294,18 @@ void Grid::solve_pressure(double dt)
         for (int col_idx = 0; col_idx < COL_NUM; col_idx ++)
         {
             if (this->_fluid_cell({row_idx, col_idx})){
-                printf("FOUND A FLUID CELL\n");
+                // printf("FOUND A FLUID CELL\n");
                 // this should always be okay since borders contain leeway
                 double dU = (this->horizontal_velocity[row_idx][col_idx+1].value - this->horizontal_velocity[row_idx][col_idx].value)/this->cell_width;
                 double dV = (this->vertical_velocity[row_idx+1][col_idx].value - this->vertical_velocity[row_idx][col_idx].value)/this->cell_height;
 
-                printf("%f\n", -(dU + dV));
-                this->set_dV_idx({row_idx, col_idx}, -(dU + dV));
+                // printf("%f\n", (dU + dV));
+                this->set_dV_idx({row_idx, col_idx}, (dU + dV));
             }
         }
     }
 
-    printf("populated right\n");
+    // printf("populated right\n");
 
     // consider solid boundaries 
     // TODO -> our solids are only constant velocity rn
@@ -319,9 +318,6 @@ void Grid::solve_pressure(double dt)
         for (int col_idx = 0; col_idx < COL_NUM; col_idx ++)
         {
             grid_idx_t my_idx = {row_idx, col_idx};
-
-            printf("setting cell:");
-            this->print_cell(my_idx);
 
             // TODO -> should this be an interpolation
             double density = this->cells[row_idx][col_idx].density; 
@@ -338,8 +334,6 @@ void Grid::solve_pressure(double dt)
             else if(_air_cell(lneighbor)){
                 this->add_to_A(my_idx, CENTER, dt_dx2 / density);
             }
-            printf("l fluid cells\n");
-
             if(_fluid_cell(rneighbor)){
                 this->set_A_idx(my_idx, RIGHT, -dt_dx2 / density);
                 this->add_to_A(my_idx, CENTER, dt_dx2 / density);
@@ -347,8 +341,6 @@ void Grid::solve_pressure(double dt)
             else if(_air_cell(rneighbor)){
                 this->add_to_A(my_idx, CENTER, dt_dx2 / density);
             }
-
-            printf("r fluid cells\n");
 
             // vertical neighbors
             grid_idx_t tneighbor = _tneighbor(my_idx);
@@ -360,47 +352,90 @@ void Grid::solve_pressure(double dt)
             else if(_air_cell(tneighbor)){
                 this->add_to_A(my_idx, CENTER, dt_dy2 / density);
             }
-            printf("t fluid cells\n");
 
             if(_fluid_cell(bneighbor)){
-                printf("fluid\n");
-                this->print_cell(bneighbor);
                 this->set_A_idx(my_idx, BOTTOM, -dt_dy2 / density);
-                printf("set idx\n");
                 this->add_to_A(my_idx, CENTER, dt_dy2 / density);
             }
             else if(_air_cell(bneighbor)){
-                printf("air\n");
                 this->add_to_A(my_idx, CENTER, dt_dy2 / density);
             }
-
-            printf("b fluid cells\n");
         }
     }
 
-    printf("built A\n");
+    // printf("built A\n");
 
     // compute the final p matrix
     if(!this->solve_with_PCG())
     {
         printf("ERROR SOLVING PCG\n");
-        return;
     }
 
     // distribute pVec to the pressure grid
-    // TODO -> this isn't actually necessary ?
+    // TODO -> this isn't actually necessary but might be nice for viz ?
     for (int row_idx = 0; row_idx < ROW_NUM; row_idx ++)
     {
         for (int col_idx = 0; col_idx < COL_NUM; col_idx ++)
         {
-            printf("%f\n", this->pVec[get_flat_idx({row_idx, col_idx})]);
+            // printf("%f\n", this->pVec[get_flat_idx({row_idx, col_idx})]);
             this->pressure_grid[row_idx][col_idx].value = this->pVec[get_flat_idx({row_idx, col_idx})];
         }
     }
 
-    // update velocities
+    // update velocities for every non-air cell
+    double dt_dx = dt / (this->cell_width);
+    double dt_dy = dt / (this->cell_height);
+
+    for(size_t row_idx = 0; row_idx<ROW_NUM; row_idx++)
+    {
+        for(size_t col_idx = 0; col_idx<COL_NUM; col_idx++)
+        {
+            // TODO -> should this be an interpolation
+            double density = this->cells[row_idx][col_idx].density; 
+
+            grid_idx_t cell_idx = {row_idx, col_idx};
+            grid_idx_t lneigh = this->_lneighbor(cell_idx);
+            grid_idx_t tneigh = this->_tneighbor(cell_idx);
+
+            Vertex& ui0 = this->horizontal_velocity[row_idx][col_idx];
+            Vertex& vi0 = this->vertical_velocity[row_idx][col_idx];
+
+            double hvalue = 0.0;
+            if(_fluid_cell(cell_idx) && _fluid_cell(lneigh)){
+                hvalue = dt_dx * (pressure_grid[row_idx][col_idx].value - 
+                    pressure_grid[lneigh.first][lneigh.second].value) / density;
+
+                // printf("hvalue: %f\n", hvalue);
+                ui0.value -= hvalue;
+            }
+            else 
+                ui0.value = hvalue;
+
+            double vvalue = 0.0;
+            if(_fluid_cell(cell_idx) && _fluid_cell(tneigh)){
+                vvalue = dt_dy * (pressure_grid[row_idx][col_idx].value - 
+                    pressure_grid[tneigh.first][tneigh.second].value) / density;
+                    // printf("vvalue: %f\n", vvalue);
+                vi0.value -= vvalue;
+            }
+            else 
+                vi0.value = vvalue;
+        }
+
+        // set horizontal velocities bordering solid cells
+        Vertex& ui0 = this->horizontal_velocity[row_idx][COL_NUM];
+        ui0.value = 0;
+    }
+
+    for(size_t col_idx = 0; col_idx<COL_NUM; col_idx++)
+    { 
+        // vertical velocities at the bottom
+        Vertex& vi0 = this->vertical_velocity[ROW_NUM][col_idx];
+        vi0.value = 0;
+    }
 
     // print the vector
+    #ifdef DEBUG
     for (int row_idx = 0; row_idx < ROW_NUM; row_idx ++)
     {
         printf("row %d: \n", row_idx);
@@ -410,6 +445,9 @@ void Grid::solve_pressure(double dt)
             printf("[%d]: %f ", col_idx, this->pVec[this->get_flat_idx(my_idx)]);
         }
     }
+
+    printf("\n");
+    #endif
 }
 
 void Grid::print_grid()
