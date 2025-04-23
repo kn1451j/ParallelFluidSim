@@ -1,5 +1,6 @@
 #include <sstream>
 #include <string>
+#include <algorithm>
 
 #define NUM_PARTICLES 1024
 #define SQRT_NUM_PARTICLES 32
@@ -42,13 +43,15 @@ struct Point
     {
         // printf("p1.x: %f, p1.y: %f\n", p1.x, p1.y);
         // printf("p2.x: %f, p2.y: %f\n", x, y);
-        return abs(x - p1.x)<=width/2 && abs(y - p1.y)<=height/2 ? 1 : 0;
+        double dist = abs(x - p1.x)<=width/2 && abs(y - p1.y)<=height/2 ? 1 : 0;
+        return dist;
     }
 
     // TODO -> this is not right (1 - (x - xi))
     double bilinear(Point p1, double width, double height)
     {
-        return (1.0 - abs(this->x - p1.x)/width)*(1.0 - abs(this->y - p1.y)/height);
+        double dist = (1.0 - abs(this->x - p1.x)/width)*(1.0 - abs(this->y - p1.y)/height);
+        return std::clamp(dist, 0.0, 1.0);
     }
 
     std::string print() {

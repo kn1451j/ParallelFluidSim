@@ -17,9 +17,11 @@ class Fluid
             this->particles.resize(NUM_PARTICLES);
             this->width = width;
             this->height = height;
+            // double density = PARTICLE_MASS * NUM_PARTICLES / (width * height);
+            double density = 1.0;
 
             // initialize a grid
-            this->grid = new Grid(width, height);
+            this->grid = new Grid(width, height, density);
 
             // initialize particles uniformly across grid
             for (int row_idx=0; row_idx<SQRT_NUM_PARTICLES; row_idx++)

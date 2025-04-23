@@ -138,14 +138,20 @@ std::vector<double> Grid::apply_A(std::vector<double> search)
             // multiply the of A with the corresponding pij values
             if(this->_fluid_cell({row_idx, col_idx}))
             {
-                // iterate through 5 values and apply A
-                // printf("(%d, %d): %f, %f, %f, %f, %f\n", row_idx, col_idx,
-                //     this->sparseA[cell_idx][LEFT], 
-                //     this->sparseA[cell_idx][RIGHT], this->sparseA[cell_idx][CENTER], this->sparseA[cell_idx][TOP],
-                //     this->sparseA[cell_idx][BOTTOM]
-                // );
-
                 int cell_idx = this->get_flat_idx({row_idx, col_idx});
+
+                // iterate through 5 values and apply A
+                #ifdef DEBUG
+                printf("(%d, %d): %f, %f, %f, %f, %f\n", row_idx, col_idx,
+                    this->sparseA[cell_idx][LEFT], 
+                    this->sparseA[cell_idx][RIGHT], this->sparseA[cell_idx][CENTER], this->sparseA[cell_idx][TOP],
+                    this->sparseA[cell_idx][BOTTOM]
+                );
+
+                printf("%f\n",
+                    search[cell_idx]
+                );
+                #endif
                 
                 result[cell_idx] += this->sparseA[cell_idx][CENTER] * search[cell_idx];
 
@@ -178,6 +184,8 @@ std::vector<double> Grid::apply_A(std::vector<double> search)
                     int bidx = this->get_flat_idx(bneigh);
                     result[cell_idx] += this->sparseA[cell_idx][BOTTOM] * search[bidx];
                 }
+
+                // printf("result: %f\n", result[cell_idx]);
             }
         }
     }
@@ -263,8 +271,10 @@ bool Grid::solve_with_PCG()
         // how different the residual and search vec are
         double s_dot_a = std::inner_product(search_vec.begin(), search_vec.end(), auxilary_vec.begin(), 0.0);
 
+        // printf("s_dot_a: %f\n");
+
         // A is singular! everything is ok i think
-        if(s_dot_a<EPS) return true;
+        if(s_dot_a<0.0000001) return true;
 
         double alpha = sigma / s_dot_a;
 

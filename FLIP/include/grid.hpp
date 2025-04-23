@@ -9,20 +9,20 @@
 
 #include "particle.hpp"
 
-// #define DEBUG
+// #define DEBUG 
 // #define REALTIME 1
 
 // Grid coarsness
-#define ROW_NUM 500
-#define COL_NUM 500
+#define ROW_NUM 32
+#define COL_NUM 32
 
 #define EPS 0.0001
+#define TOL 0.001
+#define MAX_ITER 10
 
-#define PIC_WEIGHT 0.9
+#define PIC_WEIGHT 1.0
 
 #define SPARSE_WIDTH 5
-#define TOL 0.0001
-#define MAX_ITER 100
 
 enum Direction {
     LEFT = 0, 
@@ -104,7 +104,7 @@ class Grid
     */
     public:
         // makes a staggered grid with ROW_NUM rows and COL_NUM cols
-        Grid(double width, double height);
+        Grid(double width, double height, double density);
 
         // exclusive owners of the pressure solver
         ~Grid() {};
@@ -157,29 +157,60 @@ class Grid
         double cell_width;
         double cell_height;
         double cell_volume;
+        double density;
 
         void print_grid();
 
     private:
         void print_cell(grid_idx_t cell_idx) { printf("(%d, %d) \n", cell_idx.first, cell_idx.second);}
 
+        bool _solid_vcell(grid_idx_t cell_idx)
+        {
+            return cell_idx.first==ROW_NUM;
+        }
+
+        bool _solid_hcell(grid_idx_t cell_idx)
+        {
+            return cell_idx.second==0 || cell_idx.second==COL_NUM;
+        }
+
+        bool _solid_hborder_left(grid_idx_t cell_idx) {return cell_idx.second==0;};
+        bool _solid_hborder_right(grid_idx_t cell_idx) {return cell_idx.second==COL_NUM - 1;};
+        bool _solid_vborder_top(grid_idx_t cell_idx) {return cell_idx.first==ROW_NUM - 1;};
+        bool _solid_vborder_bot(grid_idx_t cell_idx) {return cell_idx.first==0;};
+        
         bool _valid_cell(grid_idx_t cell_idx) {
             bool liquid_coord = (cell_idx.second >= 0 && cell_idx.first >= 0 && cell_idx.second < COL_NUM && cell_idx.first < ROW_NUM);
             return liquid_coord;
         }
 
+        bool _valid_hcell(grid_idx_t cell_idx) {
+            bool liquid_coord = (cell_idx.second >= 0 && cell_idx.first >= 0 && cell_idx.second <= COL_NUM && cell_idx.first < ROW_NUM);
+            return liquid_coord;
+        }
+
+        bool _valid_vcell(grid_idx_t cell_idx) {
+            bool liquid_coord = (cell_idx.second >= 0 && cell_idx.first >= 0 && cell_idx.second < COL_NUM && cell_idx.first <= ROW_NUM);
+            return liquid_coord;
+        }
+
         bool _fluid_cell(grid_idx_t cell_idx){
+            // fluid and non-zero density (to avoid nans)
             return _valid_cell(cell_idx) && this->cells[cell_idx.first][cell_idx.second].type==FLUID;
         }
 
+        bool _full_fluid_cell(grid_idx_t cell_idx){
+            return _fluid_cell(cell_idx) && this->cells[cell_idx.first][cell_idx.second].density>0;
+        }
+
         bool _air_cell(grid_idx_t cell_idx){
-            return _valid_cell(cell_idx) && this->cells[cell_idx.first][cell_idx.second].type==GAS;
+            return _valid_cell(cell_idx) && (!this->_full_fluid_cell(cell_idx));
         }
 
         grid_idx_t _lneighbor(grid_idx_t cell_idx){return {cell_idx.first, cell_idx.second - 1};}
         grid_idx_t _rneighbor(grid_idx_t cell_idx){return {cell_idx.first, cell_idx.second + 1};}
-        grid_idx_t _tneighbor(grid_idx_t cell_idx){return {cell_idx.first - 1, cell_idx.second};}
-        grid_idx_t _bneighbor(grid_idx_t cell_idx){return {cell_idx.first + 1, cell_idx.second};}
+        grid_idx_t _tneighbor(grid_idx_t cell_idx){return {cell_idx.first + 1, cell_idx.second};}
+        grid_idx_t _bneighbor(grid_idx_t cell_idx){return {cell_idx.first - 1, cell_idx.second};}
         int get_flat_idx(grid_idx_t idx) {return COL_NUM * idx.first + idx.second;}
 
         /*

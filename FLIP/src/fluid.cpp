@@ -29,7 +29,7 @@ void Fluid::timestep()
 {
     // set dt to just be a constant for debugging
     #ifndef REALTIME 
-    double dt = 0.1;
+    double dt = 0.01;
     #endif
     #ifdef REALTIME
     auto now = std::chrono::high_resolution_clock::now();
@@ -49,12 +49,12 @@ void Fluid::timestep()
     // this->grid->print_grid();
 
     // TODO -> add ghost pressures
-    this->grid->solve_pressure(dt);
+    // this->grid->solve_pressure(dt);
     this->grid->transfer_from_grid(this->particles);
 
     #ifdef DEBUG
-    this->print_particles();
-    this->grid->print_grid();
+    // this->print_particles();
+    // this->grid->print_grid();
     #endif
 
 }
@@ -112,7 +112,7 @@ void Fluid::display_particles()
     for(Particle p : this->particles)
     {
         // ensure inverting the height
-        cv::circle(this->display, cv::Point(p.position.x, this->height - p.position.y), 5, cv::Scalar(0, 0, 255), 1);
+        cv::circle(this->display, cv::Point(p.position.x, this->height - p.position.y), 2, cv::Scalar(0, 0, 255), 1, cv::FILLED);
     }
 
     cv::imshow("Fluid Sim Slice", this->display);
