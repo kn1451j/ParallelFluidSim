@@ -13,12 +13,13 @@
 // #define REALTIME 1
 
 // Grid coarsness
-#define ROW_NUM 32
-#define COL_NUM 32
+#define ROW_NUM 100
+#define COL_NUM 100
 
+#define CLAMP 0.5
 #define EPS 0.0001
 #define TOL 0.001
-#define MAX_ITER 10
+#define MAX_ITER 100
 
 #define PIC_WEIGHT 1.0
 
@@ -166,7 +167,7 @@ class Grid
 
         bool _solid_vcell(grid_idx_t cell_idx)
         {
-            return cell_idx.first==ROW_NUM;
+            return cell_idx.first==ROW_NUM || cell_idx.first==0;
         }
 
         bool _solid_hcell(grid_idx_t cell_idx)

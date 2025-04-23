@@ -191,6 +191,7 @@ void Grid::transfer_to_grid(std::vector<Particle>& particles)
             ui0.value += p.mass * dist * p.velocity.x; // TODO -> should this be bilinear? just 4 closest neighbors?
             // ui0.normalization += p.mass; // TODO -> normalize per particles
             // ui0.normalization = NUM_PARTICLES / (this->cell_width * this->cell_height);
+            ui0.normalization += dist;
         } 
 
         // do the same for vertical
@@ -210,7 +211,7 @@ void Grid::transfer_to_grid(std::vector<Particle>& particles)
 
             double dist =  p.position.bilinear(vi0.position, this->cell_width, this->cell_height);
             vi0.value += p.mass * dist * p.velocity.y;
-            // vi0.normalization += dist;
+            vi0.normalization += dist;
             // vi0.normalization += p.mass;
             // vi0.normalization = NUM_PARTICLES / (this->cell_width * this->cell_height);
         }
@@ -281,7 +282,7 @@ void Grid::transfer_from_grid(std::vector<Particle>& particles)
         }
 
         // normalize
-        // p.velocity.x /= velocity_norm;
+        p.velocity.x /= velocity_norm;
 
         Neighbors nv = this->get_vertical_neighbors(p);
         velocity_norm = 0.0;
@@ -295,7 +296,7 @@ void Grid::transfer_from_grid(std::vector<Particle>& particles)
             velocity_norm += dist;
         }
 
-        // p.velocity.y /= velocity_norm;
+        p.velocity.y /= velocity_norm;
     }
 }
 
@@ -340,14 +341,14 @@ void Grid::solve_pressure(double dt)
                 }
                 if (this->_solid_hborder_right({row_idx, col_idx})){
                     double hv = this->horizontal_velocity[row_idx][col_idx + 1].value;
-                    this->add_to_dV({row_idx, col_idx}, hv / dx);
+                    this->add_to_dV({row_idx, col_idx}, - hv / dx);
                 }
                 if (this->_solid_vborder_top({row_idx, col_idx})){
-                    double hv = this->vertical_velocity[row_idx][col_idx].value;
+                    double hv = this->vertical_velocity[row_idx + 1][col_idx].value;
                     this->add_to_dV({row_idx, col_idx}, hv / dy);
                 }
                 if (this->_solid_vborder_bot({row_idx, col_idx})){
-                    double hv = this->vertical_velocity[row_idx + 1][col_idx].value;
+                    double hv = this->vertical_velocity[row_idx][col_idx].value;
                     this->add_to_dV({row_idx, col_idx}, - hv / dy);
                 } 
             }
@@ -517,7 +518,7 @@ void Grid::solve_pressure(double dt)
 
             grid_idx_t cell_idx = {row_idx, col_idx};
             grid_idx_t lneigh = this->_lneighbor(cell_idx);
-            grid_idx_t tneigh = this->_tneighbor(cell_idx);
+            grid_idx_t bneigh = this->_bneighbor(cell_idx);
 
             Vertex& ui0 = this->horizontal_velocity[row_idx][col_idx];
             Vertex& vi0 = this->vertical_velocity[row_idx][col_idx];
@@ -543,10 +544,10 @@ void Grid::solve_pressure(double dt)
             if(this->_solid_vcell(cell_idx)) 
                 vi0.value = hvalue;
             else 
-            if(_full_fluid_cell(cell_idx) || _full_fluid_cell(tneigh)){
+            if(_full_fluid_cell(cell_idx) || _full_fluid_cell(bneigh)){
                 // double avgd = (density + this->cells[tneigh.first][tneigh.second].density)/2;
                 vvalue = dt_dy * (pressure_grid[row_idx][col_idx].value - 
-                    pressure_grid[tneigh.first][tneigh.second].value) / density;
+                    pressure_grid[bneigh.first][bneigh.second].value) / density;
                     // printf("vvalue: %f\n", vvalue);
                 vi0.value -= vvalue;
             }
@@ -567,7 +568,7 @@ void Grid::solve_pressure(double dt)
     }
 
     // print the vector
-    // #ifdef DEBUG
+    #ifdef DEBUG
     for (int row_idx = 0; row_idx < ROW_NUM; row_idx ++)
     {
         printf("row %d: \n", row_idx);
@@ -579,7 +580,7 @@ void Grid::solve_pressure(double dt)
     }
 
     printf("\n");
-    // #endif
+    #endif
 }
 
 void Grid::print_grid()
