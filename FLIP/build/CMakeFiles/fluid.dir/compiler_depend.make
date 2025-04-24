@@ -1117,7 +1117,12 @@ CMakeFiles/fluid.dir/src/fluid.cpp.o: /Users/katerinanikiforova/Documents/S24/41
   /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/video.hpp \
   /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/video/background_segm.hpp \
   /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/video/tracking.hpp \
-  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/videoio.hpp
+  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/videoio.hpp \
+  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz.hpp \
+  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/types.hpp \
+  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/viz3d.hpp \
+  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/vizcore.hpp \
+  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/widgets.hpp
 
 CMakeFiles/fluid.dir/src/grid.cpp.o: /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/src/grid.cpp \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/__stdarg___gnuc_va_list.h \
@@ -3082,6 +3087,14 @@ CMakeFiles/fluid.dir/src/pressure_solver.cpp.o: /Users/katerinanikiforova/Docume
 
 /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/src/grid.cpp:
 
+/opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/widgets.hpp:
+
+/opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/viz3d.hpp:
+
+/opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/types.hpp:
+
+/opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz.hpp:
+
 /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/videoio.hpp:
 
 /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/video/tracking.hpp:
@@ -4269,6 +4282,8 @@ CMakeFiles/fluid.dir/src/pressure_solver.cpp.o: /Users/katerinanikiforova/Docume
 /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/__algorithm/ranges_nth_element.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/__algorithm/reverse_copy.h:
+
+/opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/vizcore.hpp:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/__algorithm/ranges_find_end.h:
 

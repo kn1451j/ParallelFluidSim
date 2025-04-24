@@ -50,11 +50,12 @@ void Fluid::timestep()
 
     // TODO -> add ghost pressures
     this->grid->solve_pressure(dt);
+
     this->grid->transfer_from_grid(this->particles);
 
     #ifdef DEBUG
-    // this->print_particles();
-    // this->grid->print_grid();
+    this->print_particles();
+    this->grid->print_grid();
     #endif
 
 }
@@ -73,6 +74,7 @@ void Fluid::advection(double timestep)
         // clamp particle position to screen (TODO magic nums)
         p.position.x = std::clamp(p.position.x, CLAMP, this->width-CLAMP);
         p.position.y = std::clamp(p.position.y, CLAMP, this->height-CLAMP);
+        p.position.z = std::clamp(p.position.z, CLAMP, this->depth-CLAMP);
         // add z
     }
 }
@@ -94,25 +96,25 @@ void Fluid::external_forces(double timestep)
 */
 void Fluid::display_particles()
 {
+    // std::vector<cv::Point3f> points;
+    // // Fill the 'points' matrix with your 3D data
+    // for(Particle p : this->particles)
+    // {
+    //     // ensure inverting the height
+    //     points.push_back(cv::Point3f(p.position.x, this->height - p.position.y, p.position.z));
+    //     cv::circle(this->display, cv::Point(p.position.x, this->height - p.position.y), 5, cv::Scalar(0, 0, 255), 1, cv::FILLED);
+    // }
+
+    // cv::viz::WCloud cloud_widget(points);
+    // this->display.showWidget("point_cloud", cloud_widget);
+
+
     this->display = cv::Mat(this->width, this->height, CV_8UC3, cv::Scalar(0, 0, 0));
-
-    // highlights grid based on density
-    for(size_t row_idx = 0; row_idx<ROW_NUM; row_idx++)
-    {
-        for(size_t col_idx = 0; col_idx<COL_NUM; col_idx++)
-        {
-            Cell cell = this->grid->cells[row_idx][col_idx];
-
-            cv::rectangle(this->display, cv::Point(cell.position.x - this->grid->cell_width/2, this->height - (cell.position.y - this->grid->cell_height/2)), 
-                cv::Point(cell.position.x + this->grid->cell_width/2, this->height - (cell.position.y + this->grid->cell_height/2)), 
-                cv::Scalar(cell.density*this->grid->cell_volume*255, 0, 0), cv::FILLED);
-        }
-    }
 
     for(Particle p : this->particles)
     {
         // ensure inverting the height
-        cv::circle(this->display, cv::Point(p.position.x, this->height - p.position.y), 5, cv::Scalar(0, 0, 255), 1, cv::FILLED);
+        cv::circle(this->display, cv::Point(p.position.x, this->height - p.position.y), 5, cv::Scalar(depth - p.position.z, 0, p.position.z), 1, cv::FILLED);
     }
 
     cv::imshow("Fluid Sim Slice", this->display);
@@ -122,7 +124,7 @@ void Fluid::print_particles()
 {
     for(Particle p : this->particles)
     {
-        printf("Particle %d at (%f, %f)\n", p.id, p.position.x, p.position.y);
-        printf("uv: (%f, %f)\n", p.velocity.x, p.velocity.y);
+        printf("Particle %d at (%f, %f, %f)\n", p.id, p.position.x, p.position.y, p.position.z);
+        printf("uv: (%f, %f, %f)\n", p.velocity.x, p.velocity.y, p.velocity.z);
     }
 }

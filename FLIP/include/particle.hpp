@@ -2,8 +2,7 @@
 #include <string>
 #include <algorithm>
 
-#define NUM_PARTICLES 1024
-#define SQRT_NUM_PARTICLES 32
+#define NUM_PARTICLES 2000
 
 /*
 
@@ -48,10 +47,11 @@ struct Point
     }
 
     // TODO -> this is not right (1 - (x - xi))
-    double bilinear(Point p1, double width, double height)
+    double bilinear(Point p1, double width, double height, double depth)
     {
-        double dist = (1.0 - abs(this->x - p1.x)/width)*(1.0 - abs(this->y - p1.y)/height);
-        return std::clamp(dist, 0.0, 1.0);
+        double hdist = (1.0 - abs(this->x - p1.x)/width)*(1.0 - abs(this->y - p1.y)/height);
+        double ddist = hdist * (1.0 - abs(this->z - p1.z)/depth);
+        return std::clamp(ddist, 0.0, 1.0);
     }
 
     std::string print() {

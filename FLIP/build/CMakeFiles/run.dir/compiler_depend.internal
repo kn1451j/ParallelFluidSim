@@ -1119,4 +1119,9 @@ CMakeFiles/run.dir/run.cpp.o
  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/video/background_segm.hpp
  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/video/tracking.hpp
  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/videoio.hpp
+ /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz.hpp
+ /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/types.hpp
+ /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/viz3d.hpp
+ /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/vizcore.hpp
+ /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/widgets.hpp
 

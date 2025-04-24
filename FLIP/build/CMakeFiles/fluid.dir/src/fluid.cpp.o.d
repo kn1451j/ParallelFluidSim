@@ -1100,6 +1100,11 @@ CMakeFiles/fluid.dir/src/fluid.cpp.o: \
   /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/video.hpp \
   /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/video/tracking.hpp \
   /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/video/background_segm.hpp \
+  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz.hpp \
+  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/types.hpp \
+  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/widgets.hpp \
+  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/viz3d.hpp \
+  /opt/homebrew/Cellar/opencv/4.10.0_15/include/opencv4/opencv2/viz/vizcore.hpp \
   /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/include/grid.hpp \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/numeric \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/__numeric/accumulate.h \

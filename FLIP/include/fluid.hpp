@@ -1,6 +1,7 @@
 #include <math.h>
 #include <chrono>
 #include <opencv2/opencv.hpp>
+#include <opencv2/viz.hpp>
 
 #include "grid.hpp"
 
@@ -11,33 +12,40 @@ static Point GRAVITY = Point(0.0f, -9.8f, 0.0f);
 class Fluid
 {
     public:
-        Fluid(double width, double height)
+        Fluid(double width, double height, double depth, cv::viz::Viz3d window)
         : display()
         {
             this->particles.resize(NUM_PARTICLES);
             this->width = width;
             this->height = height;
-            double density = PARTICLE_MASS * NUM_PARTICLES / (width * height);
+            this->depth = depth;
+            double density = PARTICLE_MASS * NUM_PARTICLES / (width * height * depth);
             // double density = 1.0;
 
             // initialize a grid
-            this->grid = new Grid(width, height, density);
+            this->grid = new Grid(width, height, depth, density);
 
-            // initialize particles uniformly across grid
-            for (int row_idx=0; row_idx<SQRT_NUM_PARTICLES; row_idx++)
+            // initialize particles randomly across grid
+            for (int idx=0; idx<NUM_PARTICLES; idx++)
             {
-                for (int col_idx=0; col_idx<SQRT_NUM_PARTICLES; col_idx++)
-                {
-                    double x = width*(col_idx+0.5)/SQRT_NUM_PARTICLES;
-                    double y = height*(row_idx+0.5)/SQRT_NUM_PARTICLES;
+                    float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                    double x = width*r;
 
-                    Point pose = Point(x, y, 0.0f);
+                    r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                    double y = height*r;
+
+                    r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                    double z = depth*r;
+
+                    Point pose = Point(x, y, z);
                     Point vel = Point();
 
-                    size_t particle_idx = row_idx * SQRT_NUM_PARTICLES + col_idx;
+                    size_t particle_idx = idx;
                     this->particles[particle_idx] = Particle(particle_idx, pose, vel, PARTICLE_MASS);
-                }
             }
+
+            // this->display.setWindowSize(cv::Size(500, 500));
+            // this->display.setWindowPosition(cv::Point(150, 150));
         };
 
         ~Fluid(){
@@ -54,6 +62,7 @@ class Fluid
         
         double width;
         double height;
+        double depth;
 
         // TODO make sure this is memory safe in terms of ownership
         std::vector<Particle> particles;
@@ -62,8 +71,7 @@ class Fluid
         void advection(double timestep);
         void external_forces(double timestep);
 
-        // size_t get_particle_idx(int row_idx, int col_idx){};
-
-        // for displaying a 2D slice
+        // for displaying a 3D image
+        // cv::viz::Viz3d display;
         cv::Mat display;
 };
