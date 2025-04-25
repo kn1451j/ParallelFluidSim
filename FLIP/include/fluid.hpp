@@ -12,15 +12,15 @@ static Point GRAVITY = Point(0.0f, -9.8f, 0.0f);
 class Fluid
 {
     public:
-        Fluid(double width, double height, double depth, cv::viz::Viz3d window)
+        Fluid(double width, double height, double depth)
         : display()
         {
             this->particles.resize(NUM_PARTICLES);
             this->width = width;
             this->height = height;
             this->depth = depth;
-            double density = PARTICLE_MASS * NUM_PARTICLES / (width * height * depth);
-            // double density = 1.0;
+            // double density = PARTICLE_MASS * NUM_PARTICLES / (width * height * depth);
+            double density = 1;
 
             // initialize a grid
             this->grid = new Grid(width, height, depth, density);
@@ -40,8 +40,7 @@ class Fluid
                     Point pose = Point(x, y, z);
                     Point vel = Point();
 
-                    size_t particle_idx = idx;
-                    this->particles[particle_idx] = Particle(particle_idx, pose, vel, PARTICLE_MASS);
+                    this->particles[idx] = Particle(idx, pose, vel, PARTICLE_MASS);
             }
 
             // this->display.setWindowSize(cv::Size(500, 500));

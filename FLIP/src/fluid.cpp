@@ -11,7 +11,7 @@ void Fluid::run()
     while(1){
         this->timestep();
 
-        printf("Updated %zu particles\n", this->particles.size());
+        // printf("Updated %zu particles\n", this->particles.size());
 
         // display a frame (for now just in 2D)
         this->display_particles();
@@ -29,7 +29,7 @@ void Fluid::timestep()
 {
     // set dt to just be a constant for debugging
     #ifndef REALTIME 
-    double dt = 0.5;
+    double dt = 0.1;
     #endif
     #ifdef REALTIME
     auto now = std::chrono::high_resolution_clock::now();
@@ -46,7 +46,7 @@ void Fluid::timestep()
 
     this->grid->transfer_to_grid(this->particles);
 
-    // this->grid->print_grid();
+    this->grid->print_grid();
 
     // TODO -> add ghost pressures
     this->grid->solve_pressure(dt);
@@ -54,8 +54,8 @@ void Fluid::timestep()
     this->grid->transfer_from_grid(this->particles);
 
     #ifdef DEBUG
-    this->print_particles();
-    this->grid->print_grid();
+    // this->print_particles();
+    // this->grid->print_grid();
     #endif
 
 }
@@ -108,13 +108,29 @@ void Fluid::display_particles()
     // cv::viz::WCloud cloud_widget(points);
     // this->display.showWidget("point_cloud", cloud_widget);
 
+    this->display = cv::Mat(this->width, this->height, CV_8UC4, cv::Scalar(0, 0, 0));
+    // for(size_t depth_idx = 0; depth_idx<DEPTH_NUM; depth_idx++)
+    // {
+    //     for(size_t row_idx = 0; row_idx<ROW_NUM; row_idx++)
+    //     {
+    //         for(size_t col_idx = 0; col_idx<COL_NUM; col_idx++)
+    //         {
+    //             Cell cell = this->grid->cells[row_idx][col_idx][depth_idx];
 
-    this->display = cv::Mat(this->width, this->height, CV_8UC3, cv::Scalar(0, 0, 0));
+    //             double color = (depth - cell.position.z) / depth;
+    //             if(cell.density>0)
+    //                 cv::rectangle(this->display, cv::Point(cell.position.x - this->grid->cell_width/2, this->height - (cell.position.y - this->grid->cell_height/2)), 
+    //                 cv::Point(cell.position.x + this->grid->cell_width/2, this->height - (cell.position.y + this->grid->cell_height/2)), 
+    //                 cv::Scalar(255, 255*color, 255*color), cv::FILLED);
+    //         }
+    //     }
+    // }
 
     for(Particle p : this->particles)
     {
         // ensure inverting the height
-        cv::circle(this->display, cv::Point(p.position.x, this->height - p.position.y), 5, cv::Scalar(depth - p.position.z, 0, p.position.z), 1, cv::FILLED);
+        double color = (depth - p.position.z) / depth;
+        cv::circle(this->display, cv::Point(p.position.x, this->height - p.position.y), 5, cv::Scalar(255*color, 0, 255*(1 - color), 1), 1, cv::FILLED);
     }
 
     cv::imshow("Fluid Sim Slice", this->display);

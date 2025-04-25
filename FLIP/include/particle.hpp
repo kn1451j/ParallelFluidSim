@@ -2,7 +2,7 @@
 #include <string>
 #include <algorithm>
 
-#define NUM_PARTICLES 2000
+#define NUM_PARTICLES 100
 
 /*
 
@@ -50,13 +50,16 @@ struct Point
     double bilinear(Point p1, double width, double height, double depth)
     {
         double hdist = (1.0 - abs(this->x - p1.x)/width)*(1.0 - abs(this->y - p1.y)/height);
+        // printf("ddeist: %f\n",depth);
+        // printf("hdist: %f\n",hdist);
         double ddist = hdist * (1.0 - abs(this->z - p1.z)/depth);
+        // printf("ddist: %f\n",ddist);
         return std::clamp(ddist, 0.0, 1.0);
     }
 
     std::string print() {
         std::stringstream ss;
-        ss << "p.x "<<this->x<<", p.y "<< this->y<<"\n";
+        ss << "p.x "<<this->x<<", p.y "<< this->y<<", p.z: "<<this->z<<"\n";
         return ss.str();
     };
 };

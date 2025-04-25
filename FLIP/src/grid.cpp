@@ -3,13 +3,13 @@
 #include "grid.hpp"
 
 
-Grid::Grid(double width, double height, double depth, double density = 1.0) {
+Grid::Grid(double width, double height, double depth, double density) {
     this->width = width;
     this->height = height;
     this->depth = depth;
-    this->cell_width = COL_NUM / width;
-    this->cell_height = ROW_NUM / height;
-    this->cell_depth = DEPTH_NUM / depth;
+    this->cell_width = width / COL_NUM;
+    this->cell_height = height / ROW_NUM;
+    this->cell_depth = depth / DEPTH_NUM;
     this->cell_volume = this->cell_width * this->cell_height * this->cell_depth;
     this->density = density;
 
@@ -30,26 +30,26 @@ Grid::Grid(double width, double height, double depth, double density = 1.0) {
                 Vertex& vi0 = this->vertical_velocity[row_idx][col_idx][depth_idx];
                 double vx = this->cell_width*(col_idx+0.5);
                 double vy = this->cell_height*row_idx;
-                double vz = this->cell_height*(depth_idx+0.5);
+                double vz = this->cell_depth*(depth_idx+0.5);
                 vi0.position = Point(vx, vy, vz);
 
                 Vertex& ui0 = this->horizontal_velocity[row_idx][col_idx][depth_idx];
                 double ux = this->cell_width*col_idx;
                 double uy = this->cell_height*(row_idx+0.5);
-                double uz = this->cell_height*(depth_idx+0.5);
+                double uz = this->cell_depth*(depth_idx+0.5);
                 ui0.position = Point(ux, uy, uz);
 
                 Vertex& zi0 = this->depth_velocity[row_idx][col_idx][depth_idx];
                 double zx = this->cell_width*(col_idx+0.5);
                 double zy = this->cell_height*(row_idx+0.5);
-                double zz = this->cell_height*depth_idx;
+                double zz = this->cell_depth*depth_idx;
                 zi0.position = Point(zx, zy, zz);
             }
 
             Vertex& ui0 = this->horizontal_velocity[row_idx][COL_NUM][depth_idx];
             double ux = this->cell_width*COL_NUM;
             double uy = this->cell_height*(row_idx+0.5);
-            double uz = this->cell_height*(depth_idx+0.5);
+            double uz = this->cell_depth*(depth_idx+0.5);
             ui0.position =  Point(ux, uy, uz);
         }
 
@@ -58,7 +58,7 @@ Grid::Grid(double width, double height, double depth, double density = 1.0) {
             Vertex& vi0 = this->vertical_velocity[ROW_NUM][col_idx][depth_idx];
             double vx = this->cell_width*(col_idx+0.5);
             double vy = this->cell_height*ROW_NUM;
-            double vz = this->cell_height*(depth_idx+0.5);
+            double vz = this->cell_depth*(depth_idx+0.5);
             vi0.position = Point(vx, vy, vz);
         }
     }
@@ -70,7 +70,7 @@ Grid::Grid(double width, double height, double depth, double density = 1.0) {
             Vertex& zi0 = this->depth_velocity[row_idx][col_idx][DEPTH_NUM];
             double ux = this->cell_width*(col_idx+0.5);
             double uy = this->cell_height*(row_idx+0.5);
-            double uz = this->cell_height*DEPTH_NUM;
+            double uz = this->cell_depth*DEPTH_NUM;
             zi0.position = Point(ux, uy, uz);
         }
     }
@@ -118,7 +118,7 @@ Neighbors Grid::get_horizontal_neighbors(Particle p)
 {
     int row_idx = static_cast<int>(p.position.y/this->cell_height - 0.5);
     int col_idx = static_cast<int>(p.position.x/this->cell_width);
-    int depth_idx = static_cast<int>(p.position.z/this->cell_depth);
+    int depth_idx = static_cast<int>(p.position.z/this->cell_depth - 0.5);
 
     Neighbors n {};
     n.type = HORIZONTAL;
@@ -140,7 +140,7 @@ Neighbors Grid::get_vertical_neighbors(Particle p)
 {
     int row_idx = static_cast<int>(p.position.y/this->cell_height);
     int col_idx = static_cast<int>(p.position.x/this->cell_width - 0.5);
-    int depth_idx = static_cast<int>(p.position.z/this->cell_depth);
+    int depth_idx = static_cast<int>(p.position.z/this->cell_depth - 0.5);
 
     Neighbors n {};
     n.type = VERTICAL;
@@ -160,9 +160,9 @@ Neighbors Grid::get_vertical_neighbors(Particle p)
 
 Neighbors Grid::get_depth_neighbors(Particle p)
 {
-    int row_idx = static_cast<int>(p.position.y/this->cell_height);
-    int col_idx = static_cast<int>(p.position.x/this->cell_width);
-    int depth_idx = static_cast<int>(p.position.z/this->cell_depth  - 0.5);
+    int row_idx = static_cast<int>(p.position.y/this->cell_height - 0.5);
+    int col_idx = static_cast<int>(p.position.x/this->cell_width - 0.5);
+    int depth_idx = static_cast<int>(p.position.z/this->cell_depth);
 
     Neighbors n {};
     n.type = DEPTH;
@@ -388,7 +388,7 @@ void Grid::solve_pressure(double dt)
     // reset the pressure solver each time
     this->reset();
 
-    printf("reset solver\n");
+    // printf("reset solver\n");
 
     // populate right hand-side divergence of current velocity field
     double dx = this->cell_width;
@@ -408,7 +408,7 @@ void Grid::solve_pressure(double dt)
                             - this->horizontal_velocity[row_idx][col_idx][depth_idx].value) / dx;
                     double dV = (this->vertical_velocity[row_idx+1][col_idx][depth_idx].value -
                         - this->vertical_velocity[row_idx][col_idx][depth_idx].value) / dy;
-                    double dZ = (this->depth_velocity[row_idx][col_idx][depth_idx+1].value -
+                    double dZ = (this->depth_velocity[row_idx][col_idx][depth_idx + 1].value -
                         - this->depth_velocity[row_idx][col_idx][depth_idx].value) / dz;
 
                     // printf("%f\n", (dU + dV));
@@ -418,34 +418,34 @@ void Grid::solve_pressure(double dt)
                     // TODO -> this assumes solid always moves at velocity 0
                     if (this->_solid_hborder_left({row_idx, col_idx, depth_idx})){
                         double hv = this->horizontal_velocity[row_idx][col_idx][depth_idx].value;
-                        this->add_to_dV({row_idx, col_idx, depth_idx}, - hv / dx);
+                        this->add_to_dV({row_idx, col_idx, depth_idx}, - 2 * hv / dx);
                     }
                     if (this->_solid_hborder_right({row_idx, col_idx, depth_idx})){
                         double hv = this->horizontal_velocity[row_idx][col_idx + 1][depth_idx].value;
-                        this->add_to_dV({row_idx, col_idx, depth_idx}, - hv / dx);
+                        this->add_to_dV({row_idx, col_idx, depth_idx}, 2 * hv / dx);
                     }
                     if (this->_solid_vborder_top({row_idx, col_idx, depth_idx})){
                         double hv = this->vertical_velocity[row_idx + 1][col_idx][depth_idx].value;
-                        this->add_to_dV({row_idx, col_idx, depth_idx}, hv / dy);
+                        this->add_to_dV({row_idx, col_idx, depth_idx}, 2 * hv / dy);
                     }
                     if (this->_solid_vborder_bot({row_idx, col_idx, depth_idx})){
                         double hv = this->vertical_velocity[row_idx][col_idx][depth_idx].value;
-                        this->add_to_dV({row_idx, col_idx, depth_idx}, - hv / dy);
+                        this->add_to_dV({row_idx, col_idx, depth_idx}, - 2 * hv / dy);
                     } 
                     if (this->_solid_dborder_front({row_idx, col_idx, depth_idx})){
                         double hv = this->depth_velocity[row_idx][col_idx][depth_idx].value;
-                        this->add_to_dV({row_idx, col_idx, depth_idx}, - hv / dz);
+                        this->add_to_dV({row_idx, col_idx, depth_idx}, - 2 * hv / dz);
                     }
                     if (this->_solid_dborder_back({row_idx, col_idx, depth_idx})){
-                        double hv = this->depth_velocity[row_idx][col_idx][depth_idx+1].value;
-                        this->add_to_dV({row_idx, col_idx, depth_idx}, hv / dz);
+                        double hv = this->depth_velocity[row_idx][col_idx][depth_idx + 1].value;
+                        this->add_to_dV({row_idx, col_idx, depth_idx}, 2 * hv / dz);
                     } 
                 }
             }
         }
     }
 
-    printf("populated right\n");
+    // printf("populated right\n");
 
     // consider solid boundaries 
     // TODO -> our solids are only constant velocity rn
@@ -473,18 +473,18 @@ void Grid::solve_pressure(double dt)
                     this->add_to_A(my_idx, CENTER, dt_dx2 / density);
                 }
                 // still add to pressure solve (just no pressure from this dir)
-                else if(_air_cell(lneighbor)){
-                    this->add_to_A(my_idx, CENTER, dt_dx2 / density);
-                }
+                // else if(_air_cell(lneighbor)){
+                //     this->add_to_A(my_idx, CENTER, dt_dx2 / density);
+                // }
 
                 if(_full_fluid_cell(rneighbor)){
                     // double rdensity = this->cells[rneighbor.row][rneighbor.col].density; 
                     this->set_A_idx(my_idx, RIGHT, -dt_dx2 / density);
                     this->add_to_A(my_idx, CENTER, dt_dx2 / density);
                 }
-                else if(_air_cell(rneighbor)){
-                    this->add_to_A(my_idx, CENTER, dt_dx2 / density);
-                }
+                // else if(_air_cell(rneighbor)){
+                //     this->add_to_A(my_idx, CENTER, dt_dx2 / density);
+                // }
 
                 // vertical neighbors
                 grid_idx_t tneighbor = _tneighbor(my_idx);
@@ -494,18 +494,18 @@ void Grid::solve_pressure(double dt)
                     this->set_A_idx(my_idx, TOP, -dt_dy2 / density);
                     this->add_to_A(my_idx, CENTER, dt_dy2 / density);
                 }
-                else if(_air_cell(tneighbor)){
-                    this->add_to_A(my_idx, CENTER, dt_dy2 / density);
-                }
+                // else if(_air_cell(tneighbor)){
+                //     this->add_to_A(my_idx, CENTER, dt_dy2 / density);
+                // }
 
                 if(_full_fluid_cell(bneighbor)){
                     // double bdensity = this->cells[bneighbor.row][bneighbor.col].density; 
                     this->set_A_idx(my_idx, BOTTOM, -dt_dy2 / density);
                     this->add_to_A(my_idx, CENTER, dt_dy2 / density);
                 }
-                else if(_air_cell(bneighbor)){
-                    this->add_to_A(my_idx, CENTER, dt_dy2 / density);
-                }
+                // else if(_air_cell(bneighbor)){
+                //     this->add_to_A(my_idx, CENTER, dt_dy2 / density);
+                // }
 
                 // depth neighbors
                 grid_idx_t baneighbor = _baneighbor(my_idx);
@@ -515,18 +515,18 @@ void Grid::solve_pressure(double dt)
                     this->set_A_idx(my_idx, BACK, -dt_dz2 / density);
                     this->add_to_A(my_idx, CENTER, dt_dz2 / density);
                 }
-                else if(_air_cell(baneighbor)){
-                    this->add_to_A(my_idx, CENTER, dt_dz2 / density);
-                }
+                // else if(_air_cell(baneighbor)){
+                //     this->add_to_A(my_idx, CENTER, dt_dz2 / density);
+                // }
 
                 if(_full_fluid_cell(fneighbor)){
                     // double bdensity = this->cells[bneighbor.row][bneighbor.col].density; 
                     this->set_A_idx(my_idx, FRONT, -dt_dz2 / density);
                     this->add_to_A(my_idx, CENTER, dt_dz2 / density);
                 }
-                else if(_air_cell(fneighbor)){
-                    this->add_to_A(my_idx, CENTER, dt_dz2 / density);
-                }
+                // else if(_air_cell(fneighbor)){
+                //     this->add_to_A(my_idx, CENTER, dt_dz2 / density);
+                // }
                 }
             }
         }

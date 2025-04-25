@@ -153,15 +153,16 @@ std::vector<double> Grid::apply_A(std::vector<double> search)
 
                 // iterate through 5 values and apply A
                 #ifdef DEBUG
-                printf("(%d, %d): %f, %f, %f, %f, %f\n", row_idx, col_idx,
-                    this->sparseA[cell_idx][LEFT], 
-                    this->sparseA[cell_idx][RIGHT], this->sparseA[cell_idx][CENTER], this->sparseA[cell_idx][TOP],
-                    this->sparseA[cell_idx][BOTTOM]
-                );
+                // printf("(%d, %d, %d): %f, %f, %f, %f, %f, %f, %f\n", row_idx, col_idx,
+                //     depth_idx,
+                //     this->sparseA[cell_idx][LEFT], 
+                //     this->sparseA[cell_idx][RIGHT], this->sparseA[cell_idx][CENTER], this->sparseA[cell_idx][TOP],
+                //     this->sparseA[cell_idx][BOTTOM], this->sparseA[cell_idx][BACK], this->sparseA[cell_idx][FRONT]
+                // );
 
-                printf("%f\n",
-                    search[cell_idx]
-                );
+                // printf("%f\n",
+                //     search[cell_idx]
+                // );
                 #endif
                 
                 result[cell_idx] += this->sparseA[cell_idx][CENTER] * search[cell_idx];
@@ -196,8 +197,8 @@ std::vector<double> Grid::apply_A(std::vector<double> search)
                     result[cell_idx] += this->sparseA[cell_idx][BOTTOM] * search[bidx];
                 }
 
-                grid_idx_t fneigh = this->_rneighbor({row_idx, col_idx, depth_idx});
-                grid_idx_t baneigh = this->_bneighbor({row_idx, col_idx, depth_idx});
+                grid_idx_t fneigh = this->_fneighbor({row_idx, col_idx, depth_idx});
+                grid_idx_t baneigh = this->_baneighbor({row_idx, col_idx, depth_idx});
     
                 if(this->_valid_cell(fneigh))
                 {

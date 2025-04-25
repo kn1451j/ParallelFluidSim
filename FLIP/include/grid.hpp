@@ -15,12 +15,12 @@
 // Grid coarsness
 #define ROW_NUM 4
 #define COL_NUM 4
-#define DEPTH_NUM 1
+#define DEPTH_NUM 4
 
 #define CLAMP 0.25
 #define EPS 0.0001
-#define TOL 0.001
-#define MAX_ITER 100
+#define TOL 0.0001
+#define MAX_ITER 1000
 
 #define PIC_WEIGHT 1.0
 
@@ -196,8 +196,8 @@ class Grid
         bool _solid_hborder_right(grid_idx_t cell_idx) {return cell_idx.col==COL_NUM - 1;};
         bool _solid_vborder_top(grid_idx_t cell_idx) {return cell_idx.row==ROW_NUM - 1;};
         bool _solid_vborder_bot(grid_idx_t cell_idx) {return cell_idx.row==0;};
-        bool _solid_dborder_front(grid_idx_t cell_idx) {return cell_idx.depth==DEPTH_NUM - 1;};
-        bool _solid_dborder_back(grid_idx_t cell_idx) {return cell_idx.depth==0;};
+        bool _solid_dborder_front(grid_idx_t cell_idx) {return cell_idx.depth==0;};
+        bool _solid_dborder_back(grid_idx_t cell_idx) {return cell_idx.depth==DEPTH_NUM - 1;};
         
         bool _valid_cell(grid_idx_t cell_idx) {
             bool liquid_coord = (cell_idx.col >= 0 && cell_idx.row >= 0 && cell_idx.col < COL_NUM && cell_idx.row < ROW_NUM);
@@ -228,11 +228,12 @@ class Grid
 
         bool _fluid_cell(grid_idx_t cell_idx){
             // fluid and non-zero density (to avoid nans)
-            return _valid_cell(cell_idx) && this->cells[cell_idx.row][cell_idx.col][cell_idx.depth].type==FLUID;
+            // && this->cells[cell_idx.row][cell_idx.col][cell_idx.depth].type==FLUID
+            return _valid_cell(cell_idx);
         }
 
         bool _full_fluid_cell(grid_idx_t cell_idx){
-            return _fluid_cell(cell_idx) && this->cells[cell_idx.row][cell_idx.col][cell_idx.depth].density>0;
+            return _fluid_cell(cell_idx);
         }
 
         bool _air_cell(grid_idx_t cell_idx){
