@@ -147,7 +147,7 @@
         </p>
 
         <p>
-            <strong>Week One:</strong><br>
+            <strong>April 14th:</strong><br>
             Created a 2D particle simulator framework (with potential for 3D expansion). Implemented particle advection and a sparse grid structure. Literature reviewed:
         </p>
 
@@ -167,7 +167,7 @@
         </div>
 
         <p>
-            <strong>Week Two:</strong><br>
+            <strong>April 17th:</strong><br>
             Currently have a working Eulerian grid implementation, with a particle-to-grid and from-grid transfer. The pressure solve is still unimplemented:
         </p>
 
@@ -180,7 +180,7 @@
         </div>
 
         <p>
-            <strong>Week Three:</strong><br>
+            <strong>April 21st:</strong><br>
             Currently have a partially working 2D particle simulation implmented. The interpolation scheme is wrong, and the pressure solve is buggy, but the system is end-to-end complete. The next steps will
             involve debugging the pressure solve, and implementing profiling. There are clear performance issues even in 2D with the pressure solve, and the system only runs real-time if the pressure solver is allowed
             on the order of 10 iterations.
@@ -192,9 +192,91 @@
                 <source src="media/buggyPressure.mov" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
+            <video controls>
+                <source src="media/first2d.mov" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
         </div>
-    </section>
 
+        <p>
+            <strong>April 23rd</strong><br>
+            The 2D implementation is complete and debugged! I'm really happy with how it looks. This runs in real time, so I plan to expand the system to 3D, which should cause performance problems (that we can then solve :))
+        </p>
+
+        <div class="video-container">
+            <video controls>
+                <source src="media/final2d.mov" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+
+    <p>
+        <strong>April 25th</strong><br>
+        The sequential fluid simulation is fully implemented and debugged in 3 dimensions in C++. There are clear performance issues for large grids, and the pressure solver struggles
+        to converge to a solution for the pressure gradient which is required every time step of the simulation.
+        The below videos show the visualization of the current state of the simulation: the color of the particle represents its depth along the z axis.
+    </p>
+    Running in real time with a very small grid:
+    <div class="video-container">
+        <video controls>
+            <source src="media/small3d.mov" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    Running in real time with a very poor pressure solve:
+    <div class="video-container">
+        <video controls>
+            <source src="media/nonconverging3d.mov" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    Running not in real time with a 32 x 32 x 32 voxel grid and a 100-iteration pressure solver:
+    <div class="video-container">
+        <video controls>
+            <source src="media/slow3d.mov" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <p>
+        Given the above limitations, the code has been instrumented with profiling and the following initial profiling results were found over 500 iterations of the simulation:
+        <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+              <tr>
+                <th>Function</th>
+                <th>Time (seconds)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>advect</td>
+                <td>0.020462</td>
+              </tr>
+              <tr>
+                <td>external_forces</td>
+                <td>0.004851</td>
+              </tr>
+              <tr>
+                <td>solve_pressure</td>
+                <td>33.041090</td>
+              </tr>
+              <tr>
+                <td>transfer_from_grid</td>
+                <td>0.440525</td>
+              </tr>
+              <tr>
+                <td>transfer_to_grid</td>
+                <td>0.624375</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          Clearly, the pressure solver is the most time consuming part. This will the focus of the optimizations.          
+    </p>
+
+    </section>
     <section id="results">
         <h3>Results</h3>
         <p>Coming soon...</p>

@@ -7,21 +7,6 @@
 
 #include "particle.hpp"
 
-// Grid coarsness
-#define ROW_NUM 32
-#define COL_NUM 32
-#define DEPTH_NUM 32
-
-#define CLAMP 0.25
-#define EPS 0.001
-#define TOL 0.001
-#define MAX_ITER 100
-
-#define PIC_WEIGHT 0.9
-
-#define SPARSE_WIDTH 7
-#define NUM_NEIGHBORS 6
-
 class Profiler;
 
 enum Direction {
@@ -50,7 +35,7 @@ struct grid_idx_t
 // typedef Eigen::Matrix< double, 4, 5 > Matrix45d;
 
 enum CELL_TYPE {FLUID, SOLID, GAS};
-enum VELOCITY {HORIZONTAL, VERTICAL, CELL, DEPTH};
+enum VELOCITY {HORIZONTAL, VERTICAL, CELL, INWARD};
 
 
 // TODO -> fix mass weighting

@@ -1,8 +1,9 @@
 #include <map>
 
-#define PROFILE_MODE 1
+#define PROFILE_MODE 0
 #define DEBUG 0
 #define REALTIME 0
+#define VERBOSE 0
 
 // how many timesteps to use for profiling
 #define NUM_TIME_STEPS 500

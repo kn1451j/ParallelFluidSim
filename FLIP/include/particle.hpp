@@ -2,7 +2,29 @@
 #include <string>
 #include <algorithm>
 
-#define NUM_PARTICLES 1024
+#define NUM_PARTICLES 2024
+
+// Grid coarsness
+#define ROW_NUM 32
+#define COL_NUM 32
+#define DEPTH_NUM 2
+
+#define WIDTH 250
+#define HEIGHT 250
+#define DEPTH 10
+
+#define DT 0.5
+#define PARTICLE_MASS 1.0
+
+#define CLAMP 0.25
+#define EPS 0.001
+#define TOL 0.001
+#define MAX_ITER 10
+
+#define PIC_WEIGHT 0.9
+
+#define SPARSE_WIDTH 7
+#define NUM_NEIGHBORS 6
 
 /*
 

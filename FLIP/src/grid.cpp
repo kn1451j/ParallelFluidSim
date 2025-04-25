@@ -167,7 +167,7 @@ Neighbors Grid::get_depth_neighbors(Particle p)
     int depth_idx = static_cast<int>(p.position.z/this->cell_depth);
 
     Neighbors n {};
-    n.type = DEPTH;
+    n.type = INWARD;
 
     // we dont check the value for negativity here, since negative implies solid boundary -> info we might need
     n.neighbors[0] = {row_idx, col_idx, depth_idx};
@@ -528,7 +528,9 @@ void Grid::solve_pressure(double dt)
     // compute the final p matrix
     if(!this->solve_with_PCG())
     {
+        #if VERBOSE
         printf("ERROR SOLVING PCG\n");
+        #endif
     }
 
     // distribute pVec to the pressure grid

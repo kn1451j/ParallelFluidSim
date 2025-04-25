@@ -5,8 +5,6 @@
 
 #include "grid.hpp"
 
-#define PARTICLE_MASS 1.0
-
 static Point GRAVITY = Point(0.0f, -9.8f, 0.0f);
 
 // class Profiler;
@@ -14,7 +12,7 @@ static Point GRAVITY = Point(0.0f, -9.8f, 0.0f);
 class Fluid
 {
     public:
-        Fluid(double width, double height, double depth);
+        Fluid();
         ~Fluid();
 
         void run();

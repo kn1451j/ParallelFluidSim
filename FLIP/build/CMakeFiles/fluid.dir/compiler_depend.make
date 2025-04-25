@@ -1940,7 +1940,6 @@ CMakeFiles/fluid.dir/src/grid.cpp.o: /Users/katerinanikiforova/Documents/S24/418
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/limits \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/locale \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/locale.h \
-  /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/map \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/math.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/memory \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/mutex \
@@ -2104,8 +2103,7 @@ CMakeFiles/fluid.dir/src/grid.cpp.o: /Users/katerinanikiforova/Documents/S24/418
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/xlocale/_wchar.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/xlocale/_wctype.h \
   /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/include/grid.hpp \
-  /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/include/particle.hpp \
-  /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/include/profiler.hpp
+  /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/include/particle.hpp
 
 CMakeFiles/fluid.dir/src/pressure_solver.cpp.o: /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/src/pressure_solver.cpp \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/__stdarg___gnuc_va_list.h \

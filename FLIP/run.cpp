@@ -4,7 +4,7 @@
 int main()
 {
     // cv::viz::Viz3d window("3D Plot");
-    Fluid fluid(500,500,500);
+    Fluid fluid;
     fluid.run();
 
     return 0;

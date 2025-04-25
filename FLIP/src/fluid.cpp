@@ -1,13 +1,13 @@
 #include "fluid.hpp"
 #include "profiler.hpp"
 
-Fluid::Fluid(double width, double height, double depth) : display()
+Fluid::Fluid() : display()
 {
     this->particles.resize(NUM_PARTICLES);
-    this->width = width;
-    this->height = height;
-    this->depth = depth;
-    double density = PARTICLE_MASS * NUM_PARTICLES / (width * height * depth);
+    this->width = WIDTH;
+    this->height = HEIGHT;
+    this->depth = DEPTH;
+    double density = PARTICLE_MASS * NUM_PARTICLES / (WIDTH * HEIGHT * DEPTH);
     // double density = 1;
 
     // initialize profiler
@@ -78,8 +78,8 @@ void Fluid::run()
 void Fluid::timestep()
 {
     // set dt to just be a constant for debugging
-    #if REALTIME
-    double dt = 0.5;
+    #if (!REALTIME)
+    double dt = DT;
     #else
     auto now = std::chrono::high_resolution_clock::now();
     double dt = std::chrono::duration<double>(now - this->prev_timestep).count();
