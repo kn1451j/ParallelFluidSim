@@ -19,8 +19,8 @@ class Fluid
             this->width = width;
             this->height = height;
             this->depth = depth;
-            // double density = PARTICLE_MASS * NUM_PARTICLES / (width * height * depth);
-            double density = 1;
+            double density = PARTICLE_MASS * NUM_PARTICLES / (width * height * depth);
+            // double density = 1;
 
             // initialize a grid
             this->grid = new Grid(width, height, depth, density);

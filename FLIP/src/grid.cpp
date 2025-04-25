@@ -384,11 +384,8 @@ void Grid::transfer_from_grid(std::vector<Particle>& particles)
 */
 void Grid::solve_pressure(double dt)
 {
-
     // reset the pressure solver each time
     this->reset();
-
-    // printf("reset solver\n");
 
     // populate right hand-side divergence of current velocity field
     double dx = this->cell_width;
@@ -400,52 +397,46 @@ void Grid::solve_pressure(double dt)
         {
             for (int col_idx = 0; col_idx < COL_NUM; col_idx ++)
             {
-                // todo -> chat is this right? fluid or air?
                 if (this->_full_fluid_cell({row_idx, col_idx, depth_idx})){
-                    // printf("FOUND A FLUID CELL\n");
-                    // this should always be okay since borders contain leeway in indices
+                    // Calculate divergence correctly
                     double dU = (this->horizontal_velocity[row_idx][col_idx+1][depth_idx].value
                             - this->horizontal_velocity[row_idx][col_idx][depth_idx].value) / dx;
-                    double dV = (this->vertical_velocity[row_idx+1][col_idx][depth_idx].value -
-                        - this->vertical_velocity[row_idx][col_idx][depth_idx].value) / dy;
-                    double dZ = (this->depth_velocity[row_idx][col_idx][depth_idx + 1].value -
-                        - this->depth_velocity[row_idx][col_idx][depth_idx].value) / dz;
+                    double dV = (this->vertical_velocity[row_idx+1][col_idx][depth_idx].value
+                            - this->vertical_velocity[row_idx][col_idx][depth_idx].value) / dy;
+                    double dZ = (this->depth_velocity[row_idx][col_idx][depth_idx + 1].value
+                            - this->depth_velocity[row_idx][col_idx][depth_idx].value) / dz;
 
-                    // printf("%f\n", (dU + dV));
                     this->set_dV_idx({row_idx, col_idx, depth_idx}, -(dU + dV + dZ));
                 
-                    // modify solid bordering fluid cells
-                    // TODO -> this assumes solid always moves at velocity 0
+                    // Handle solid boundaries
                     if (this->_solid_hborder_left({row_idx, col_idx, depth_idx})){
                         double hv = this->horizontal_velocity[row_idx][col_idx][depth_idx].value;
-                        this->add_to_dV({row_idx, col_idx, depth_idx}, - 2 * hv / dx);
+                        this->add_to_dV({row_idx, col_idx, depth_idx}, - hv / dx);
                     }
                     if (this->_solid_hborder_right({row_idx, col_idx, depth_idx})){
                         double hv = this->horizontal_velocity[row_idx][col_idx + 1][depth_idx].value;
-                        this->add_to_dV({row_idx, col_idx, depth_idx}, 2 * hv / dx);
+                        this->add_to_dV({row_idx, col_idx, depth_idx}, hv / dx);
                     }
                     if (this->_solid_vborder_top({row_idx, col_idx, depth_idx})){
                         double hv = this->vertical_velocity[row_idx + 1][col_idx][depth_idx].value;
-                        this->add_to_dV({row_idx, col_idx, depth_idx}, 2 * hv / dy);
+                        this->add_to_dV({row_idx, col_idx, depth_idx}, hv / dy);
                     }
                     if (this->_solid_vborder_bot({row_idx, col_idx, depth_idx})){
                         double hv = this->vertical_velocity[row_idx][col_idx][depth_idx].value;
-                        this->add_to_dV({row_idx, col_idx, depth_idx}, - 2 * hv / dy);
+                        this->add_to_dV({row_idx, col_idx, depth_idx}, - hv / dy);
                     } 
                     if (this->_solid_dborder_front({row_idx, col_idx, depth_idx})){
                         double hv = this->depth_velocity[row_idx][col_idx][depth_idx].value;
-                        this->add_to_dV({row_idx, col_idx, depth_idx}, - 2 * hv / dz);
+                        this->add_to_dV({row_idx, col_idx, depth_idx}, - hv / dz);
                     }
                     if (this->_solid_dborder_back({row_idx, col_idx, depth_idx})){
                         double hv = this->depth_velocity[row_idx][col_idx][depth_idx + 1].value;
-                        this->add_to_dV({row_idx, col_idx, depth_idx}, 2 * hv / dz);
+                        this->add_to_dV({row_idx, col_idx, depth_idx}, hv / dz);
                     } 
                 }
             }
         }
     }
-
-    // printf("populated right\n");
 
     // consider solid boundaries 
     // TODO -> our solids are only constant velocity rn
@@ -614,68 +605,54 @@ void Grid::solve_pressure(double dt)
             {
                 grid_idx_t cell_idx = {row_idx, col_idx, depth_idx};
                 grid_idx_t lneigh = this->_lneighbor(cell_idx);
-                grid_idx_t bneigh = this->_tneighbor(cell_idx);
+                grid_idx_t bneigh = this->_bneighbor(cell_idx);
                 grid_idx_t fneigh = this->_fneighbor(cell_idx);
 
                 Vertex& ui0 = this->horizontal_velocity[row_idx][col_idx][depth_idx];
                 Vertex& vi0 = this->vertical_velocity[row_idx][col_idx][depth_idx];
                 Vertex& zi0 = this->depth_velocity[row_idx][col_idx][depth_idx];
 
-                double hvalue = 0.0;
-                // if horizontally borders a solid cell, horizontal velocity is always zero
-                if(this->_solid_hcell(cell_idx)) 
-                    ui0.value = hvalue;
-                else 
-                if(_full_fluid_cell(cell_idx) || _full_fluid_cell(lneigh)){
-                    // double avgd = (density + this->cells[lneigh.row][lneigh.col].density)/2;
-                    hvalue = dt_dx * (pressure_grid[row_idx][col_idx][depth_idx].value - 
-                        pressure_grid[lneigh.row][lneigh.col][lneigh.depth].value) / density;
-
-                    // printf("hvalue: %f\n", hvalue);
-                    ui0.value -= hvalue;
+                // Update horizontal velocity
+                if(this->_solid_hcell(cell_idx)) {
+                    ui0.value = 0.0;
+                } else if(_full_fluid_cell(cell_idx) || _full_fluid_cell(lneigh)) {
+                    double hvalue = dt_dx * (pressure_grid[lneigh.row][lneigh.col][lneigh.depth].value - 
+                        pressure_grid[row_idx][col_idx][depth_idx].value) / density;
+                    ui0.value += hvalue; // Add pressure gradient
+                } else {
+                    ui0.value = 0.0;
                 }
-                else 
-                    ui0.value = hvalue;
 
-                double vvalue = 0.0;
-                // if vertically borders a solid cell, vertical velocity is always zero
-                if(this->_solid_vcell(cell_idx)) 
-                    vi0.value = vvalue;
-                else 
-                if(_full_fluid_cell(cell_idx) || _full_fluid_cell(bneigh)){
-                    // double avgd = (density + this->cells[tneigh.row][tneigh.col].density)/2;
-                    vvalue = dt_dy * (pressure_grid[row_idx][col_idx][depth_idx].value - 
-                        pressure_grid[bneigh.row][bneigh.col][bneigh.depth].value) / density;
-                        // printf("vvalue: %f\n", vvalue);
-                    vi0.value -= vvalue;
+                // Update vertical velocity
+                if(this->_solid_vcell(cell_idx)) {
+                    vi0.value = 0.0;
+                } else if(_full_fluid_cell(cell_idx) || _full_fluid_cell(bneigh)) {
+                    double vvalue = dt_dy * (pressure_grid[bneigh.row][bneigh.col][bneigh.depth].value - 
+                        pressure_grid[row_idx][col_idx][depth_idx].value) / density;
+                    vi0.value += vvalue; // Add pressure gradient
+                } else {
+                    vi0.value = 0.0;
                 }
-                else 
-                    vi0.value = vvalue;
 
-                double dvalue = 0.0;
-                // if vertically borders a solid cell, vertical velocity is always zero
-                if(this->_solid_dcell(cell_idx)) 
-                    zi0.value = dvalue;
-                else 
-                if(_full_fluid_cell(cell_idx) || _full_fluid_cell(bneigh)){
-                    // double avgd = (density + this->cells[tneigh.row][tneigh.col].density)/2;
-                    dvalue = dt_dz * (pressure_grid[row_idx][col_idx][depth_idx].value - 
-                        pressure_grid[fneigh.row][fneigh.col][fneigh.depth].value) / density;
-                        // printf("vvalue: %f\n", vvalue);
-                        zi0.value -= dvalue;
+                // Update depth velocity
+                if(this->_solid_dcell(cell_idx)) {
+                    zi0.value = 0.0;
+                } else if(_full_fluid_cell(cell_idx) || _full_fluid_cell(fneigh)) {
+                    double dvalue = dt_dz * (pressure_grid[fneigh.row][fneigh.col][fneigh.depth].value - 
+                        pressure_grid[row_idx][col_idx][depth_idx].value) / density;
+                    zi0.value += dvalue; // Add pressure gradient
+                } else {
+                    zi0.value = 0.0;
                 }
-                else 
-                    zi0.value = dvalue;
             }
 
-            // set horizontal velocities bordering solid cells
+            // Set boundary velocities to zero
             Vertex& ui0 = this->horizontal_velocity[row_idx][COL_NUM][depth_idx];
             ui0.value = 0;
         }
 
         for(size_t col_idx = 0; col_idx<COL_NUM; col_idx++)
         { 
-            // vertical velocities at the bottom
             Vertex& vi0 = this->vertical_velocity[ROW_NUM][col_idx][depth_idx];
             vi0.value = 0;
         }

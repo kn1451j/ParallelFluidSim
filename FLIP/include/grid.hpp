@@ -9,18 +9,18 @@
 
 #include "particle.hpp"
 
-#define DEBUG 
+// #define DEBUG 
 // #define REALTIME 1
 
 // Grid coarsness
-#define ROW_NUM 4
-#define COL_NUM 4
+#define ROW_NUM 32
+#define COL_NUM 32
 #define DEPTH_NUM 4
 
 #define CLAMP 0.25
-#define EPS 0.0001
-#define TOL 0.0001
-#define MAX_ITER 1000
+#define EPS 0.001
+#define TOL 0.001
+#define MAX_ITER 100
 
 #define PIC_WEIGHT 1.0
 

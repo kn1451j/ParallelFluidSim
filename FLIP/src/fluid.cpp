@@ -11,7 +11,7 @@ void Fluid::run()
     while(1){
         this->timestep();
 
-        // printf("Updated %zu particles\n", this->particles.size());
+        printf("Updated %zu particles\n", this->particles.size());
 
         // display a frame (for now just in 2D)
         this->display_particles();
@@ -29,7 +29,7 @@ void Fluid::timestep()
 {
     // set dt to just be a constant for debugging
     #ifndef REALTIME 
-    double dt = 0.1;
+    double dt = 1.0;
     #endif
     #ifdef REALTIME
     auto now = std::chrono::high_resolution_clock::now();
@@ -46,7 +46,7 @@ void Fluid::timestep()
 
     this->grid->transfer_to_grid(this->particles);
 
-    this->grid->print_grid();
+    // this->grid->print_grid();
 
     // TODO -> add ghost pressures
     this->grid->solve_pressure(dt);
