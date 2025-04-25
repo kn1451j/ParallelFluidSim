@@ -13,16 +13,16 @@
 // #define REALTIME 1
 
 // Grid coarsness
-#define ROW_NUM 32
-#define COL_NUM 32
-#define DEPTH_NUM 4
+#define ROW_NUM 50
+#define COL_NUM 50
+#define DEPTH_NUM 1
 
 #define CLAMP 0.25
 #define EPS 0.001
 #define TOL 0.001
 #define MAX_ITER 100
 
-#define PIC_WEIGHT 1.0
+#define PIC_WEIGHT 0.9
 
 #define SPARSE_WIDTH 7
 #define NUM_NEIGHBORS 6

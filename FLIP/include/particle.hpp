@@ -2,7 +2,7 @@
 #include <string>
 #include <algorithm>
 
-#define NUM_PARTICLES 100
+#define NUM_PARTICLES 1024
 
 /*
 
