@@ -1,21 +1,16 @@
 #include <vector>
 #include <utility>
 #include <set>
-#include <utility>
-#include <vector>
 #include <algorithm>
 #include <numeric>
 #include <cmath>
 
 #include "particle.hpp"
 
-// #define DEBUG 
-// #define REALTIME 1
-
 // Grid coarsness
-#define ROW_NUM 50
-#define COL_NUM 50
-#define DEPTH_NUM 1
+#define ROW_NUM 32
+#define COL_NUM 32
+#define DEPTH_NUM 32
 
 #define CLAMP 0.25
 #define EPS 0.001
@@ -26,6 +21,8 @@
 
 #define SPARSE_WIDTH 7
 #define NUM_NEIGHBORS 6
+
+class Profiler;
 
 enum Direction {
     LEFT = 0, 
@@ -113,7 +110,7 @@ class Grid
     */
     public:
         // makes a staggered grid with ROW_NUM rows and COL_NUM cols
-        Grid(double width, double height, double depth, double density);
+        Grid(double width, double height, double depth, double density, Profiler *profiler);
 
         // exclusive owners of the pressure solver
         ~Grid() {};
@@ -302,4 +299,6 @@ class Grid
         std::vector<double> apply_A(std::vector<double> search);
         void build_preconditioner();
         bool solve_with_PCG();
+
+        Profiler *profiler;
 };

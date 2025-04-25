@@ -1,4 +1,47 @@
 #include "fluid.hpp"
+#include "profiler.hpp"
+
+Fluid::Fluid(double width, double height, double depth) : display()
+{
+    this->particles.resize(NUM_PARTICLES);
+    this->width = width;
+    this->height = height;
+    this->depth = depth;
+    double density = PARTICLE_MASS * NUM_PARTICLES / (width * height * depth);
+    // double density = 1;
+
+    // initialize profiler
+    this->profiler = new Profiler();
+
+    // initialize a grid
+    this->grid = new Grid(width, height, depth, density, profiler);
+
+    // initialize particles randomly across grid
+    for (int idx=0; idx<NUM_PARTICLES; idx++)
+    {
+            float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            double x = width*r;
+
+            r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            double y = height*r;
+
+            r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            double z = depth*r;
+
+            Point pose = Point(x, y, z);
+            Point vel = Point();
+
+            this->particles[idx] = Particle(idx, pose, vel, PARTICLE_MASS);
+    }
+
+    // this->display.setWindowSize(cv::Size(500, 500));
+    // this->display.setWindowPosition(cv::Point(150, 150));
+};
+
+Fluid::~Fluid(){
+    delete this->grid;
+    delete this->profiler;
+};
 
 void Fluid::run()
 {
@@ -8,7 +51,8 @@ void Fluid::run()
     // start timestep timer
     this->prev_timestep = std::chrono::high_resolution_clock::now();
 
-    while(1){
+    int iter_counter = 0; // incremented only if profiling, o.w. essentially an infinite loop
+    while(iter_counter < NUM_TIME_STEPS){
         this->timestep();
 
         // printf("Updated %zu particles\n", this->particles.size());
@@ -16,46 +60,61 @@ void Fluid::run()
         // display a frame (for now just in 2D)
         this->display_particles();
 
-        #ifndef DEBUG
+        #if (!DEBUG)
         if(cv::waitKey(1)>0) break;
-        #endif
-        #ifdef DEBUG
+        #else
         cv::waitKey(0); // frame by frame for debugging
         #endif
+
+        #if PROFILE_MODE
+        iter_counter++;
+        #endif
     }
+
+    // print summary after
+    PROFILE_PRINT;
 }
 
 void Fluid::timestep()
 {
     // set dt to just be a constant for debugging
-    #ifndef REALTIME 
+    #if REALTIME
     double dt = 0.5;
-    #endif
-    #ifdef REALTIME
+    #else
     auto now = std::chrono::high_resolution_clock::now();
     double dt = std::chrono::duration<double>(now - this->prev_timestep).count();
     // update the time
     this->prev_timestep = now;
     #endif
 
-    // iterate through
+    // advect particles
+    PROFILE_START("advect");
     this->advection(dt);
+    PROFILE_END("advect");
+
+    PROFILE_START("external_forces");
     this->external_forces(dt);
+    PROFILE_END("external_forces");
 
     // this->print_particles();
 
+    PROFILE_START("transfer_to_grid");
     this->grid->transfer_to_grid(this->particles);
+    PROFILE_END("transfer_to_grid");
 
     // this->grid->print_grid();
 
-    // TODO -> add ghost pressures
+    PROFILE_START("solve_pressure");
     this->grid->solve_pressure(dt);
+    PROFILE_END("solve_pressure");
 
+    PROFILE_START("transfer_from_grid");
     this->grid->transfer_from_grid(this->particles);
+    PROFILE_END("transfer_from_grid");
 
-    #ifdef DEBUG
-    // this->print_particles();
-    // this->grid->print_grid();
+    #if DEBUG
+    this->print_particles();
+    this->grid->print_grid();
     #endif
 
 }

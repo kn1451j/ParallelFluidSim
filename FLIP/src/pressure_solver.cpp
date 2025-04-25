@@ -1,4 +1,5 @@
 #include "grid.hpp"
+// #include "profiler.hpp"
 
 void Grid::build_preconditioner(){
     // TODO MAKE IT SO THAT AIR CELLS CAN EXIST
@@ -152,7 +153,7 @@ std::vector<double> Grid::apply_A(std::vector<double> search)
                 int cell_idx = this->get_flat_idx({row_idx, col_idx, depth_idx});
 
                 // iterate through 5 values and apply A
-                #ifdef DEBUG
+                #if DEBUG
                 // printf("(%d, %d, %d): %f, %f, %f, %f, %f, %f, %f\n", row_idx, col_idx,
                 //     depth_idx,
                 //     this->sparseA[cell_idx][LEFT], 

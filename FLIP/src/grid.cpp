@@ -1,9 +1,13 @@
 #include <string.h>
 #include <cassert>
+
 #include "grid.hpp"
+// #include "profiler.hpp"
 
+Grid::Grid(double width, double height, double depth, double density, Profiler *p = nullptr) {
+    // initialize profiler
+    this->profiler = p;
 
-Grid::Grid(double width, double height, double depth, double density) {
     this->width = width;
     this->height = height;
     this->depth = depth;
@@ -80,8 +84,6 @@ Grid::Grid(double width, double height, double depth, double density) {
     this->sparseA.resize(ROW_NUM * COL_NUM * DEPTH_NUM, std::vector<double>(SPARSE_WIDTH));
     this->pVec.resize(ROW_NUM * COL_NUM * DEPTH_NUM);
     this->diagE.resize(ROW_NUM * COL_NUM * DEPTH_NUM);
-
-    printf("setup\n");
 };
 
 // returns -> [row_idx, col_idx]
@@ -668,7 +670,7 @@ void Grid::solve_pressure(double dt)
     }
 
     // print the vector
-    #ifdef DEBUG
+    #if DEBUG
     for (int depth_idx = 0; depth_idx < DEPTH_NUM; depth_idx ++)
     {
     for (int row_idx = 0; row_idx < ROW_NUM; row_idx ++)

@@ -1120,4 +1120,5 @@ CMakeFiles/fluid.dir/src/fluid.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/__numeric/saturation_arithmetic.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/__numeric/transform_exclusive_scan.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/__numeric/transform_inclusive_scan.h \
-  /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/include/particle.hpp
+  /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/include/particle.hpp \
+  /Users/katerinanikiforova/Documents/S24/418FinalProj/FLIP/include/profiler.hpp
