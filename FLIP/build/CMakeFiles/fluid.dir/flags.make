@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/afs/andrew.cmu.edu/usr23/knikifor/ParallelFluidSim/FLIP/include
 
-CXX_FLAGS = 
+CXX_FLAGS =  -fopenmp
 

@@ -93,6 +93,8 @@ run_EXTERNAL_OBJECTS =
 run: CMakeFiles/run.dir/run.cpp.o
 run: CMakeFiles/run.dir/build.make
 run: libfluid.a
+run: /usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so
+run: /usr/lib/x86_64-linux-gnu/libpthread.a
 run: CMakeFiles/run.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/afs/andrew.cmu.edu/usr23/knikifor/ParallelFluidSim/FLIP/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable run"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/run.dir/link.txt --verbose=$(VERBOSE)

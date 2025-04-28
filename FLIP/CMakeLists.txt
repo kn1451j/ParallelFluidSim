@@ -6,6 +6,8 @@ find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 endif()
 
+find_package(OpenMP)
+
 add_executable(run run.cpp)
 
 add_library(fluid)
@@ -22,4 +24,16 @@ target_sources(fluid
 		"src/grid.cpp"
 		"src/pressure_solver.cpp")
 
-target_link_libraries(run ${OpenCV_LIBS} fluid)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
+
+if(OpenMP_CXX_FOUND)
+  target_link_libraries(run PUBLIC OpenMP::OpenMP_CXX fluid)
+  target_compile_options(run PRIVATE "${OpenMP_CXX_FLAGS}")
+else()
+  message(WARNING "OpenMP not found. Building without OpenMP support.")
+  target_link_libraries(run ${OpenCV_LIBS} fluid)
+endif()

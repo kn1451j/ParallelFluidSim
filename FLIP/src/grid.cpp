@@ -8,6 +8,9 @@ Grid::Grid(double width, double height, double depth, double density, Profiler *
     // initialize profiler
     this->profiler = p;
 
+    omp_set_dynamic(0);
+    omp_set_num_threads(NUM_THREADS);
+
     this->width = width;
     this->height = height;
     this->depth = depth;

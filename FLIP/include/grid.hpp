@@ -4,8 +4,11 @@
 #include <algorithm>
 #include <numeric>
 #include <cmath>
+#include <omp.h>
 
 #include "particle.hpp"
+
+#define NUM_THREADS 8
 
 class Profiler;
 
