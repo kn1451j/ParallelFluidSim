@@ -1,12 +1,12 @@
 #include <map>
 
-#define PROFILE_MODE 0
+#define PROFILE_MODE 1
 #define DEBUG 0
 #define REALTIME 0
-#define VERBOSE 0
+#define VERBOSE 1
 
 // how many timesteps to use for profiling
-#define NUM_TIME_STEPS 500
+#define NUM_TIME_STEPS 100
 
 // WARNING: THE MACROS ASSUME THE CLASS YOU ARE PROFILING HAS A POINTER TO THE PROFILER NAMED AS this->profiler
 

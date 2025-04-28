@@ -8,7 +8,7 @@ Fluid::Fluid() : display()
     this->height = HEIGHT;
     this->depth = DEPTH;
     double density = PARTICLE_MASS * NUM_PARTICLES / (WIDTH * HEIGHT * DEPTH);
-    // double density = 1;
+    // double density = 1.0;
 
     // initialize profiler
     this->profiler = new Profiler();
@@ -73,6 +73,7 @@ void Fluid::run()
 
     // print summary after
     PROFILE_PRINT;
+    printf("Converge failure count: %d\n", this->grid->failure_counter);
 }
 
 void Fluid::timestep()
@@ -113,8 +114,8 @@ void Fluid::timestep()
     PROFILE_END("transfer_from_grid");
 
     #if DEBUG
-    this->print_particles();
-    this->grid->print_grid();
+    // this->print_particles();
+    // this->grid->print_grid();
     #endif
 
 }

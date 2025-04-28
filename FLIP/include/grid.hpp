@@ -154,6 +154,9 @@ class Grid
         double cell_volume;
         double density;
 
+        // number of times the pressure solver failed to converge
+        int failure_counter;
+
         void print_grid();
 
     private:
@@ -280,8 +283,8 @@ class Grid
         std::vector<double> diagE;
 
         // methods for solving PCG
-        std::vector<double> apply_preconditioner(std::vector<double> res);
-        std::vector<double> apply_A(std::vector<double> search);
+        void apply_preconditioner(std::vector<double> res, std::vector<double>& dest);
+        void apply_A(std::vector<double> search, std::vector<double> &dest);
         void build_preconditioner();
         bool solve_with_PCG();
 

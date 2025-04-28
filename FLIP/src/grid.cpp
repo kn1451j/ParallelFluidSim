@@ -17,6 +17,8 @@ Grid::Grid(double width, double height, double depth, double density, Profiler *
     this->cell_volume = this->cell_width * this->cell_height * this->cell_depth;
     this->density = density;
 
+    this->failure_counter = 0;
+
     // initialize the "poses" for each vertex
     for(size_t depth_idx = 0; depth_idx<DEPTH_NUM; depth_idx++)
     {
@@ -80,10 +82,10 @@ Grid::Grid(double width, double height, double depth, double density, Profiler *
     }
 
     // initialize pressure solver
-    this->dV.resize(ROW_NUM * COL_NUM * DEPTH_NUM);
-    this->sparseA.resize(ROW_NUM * COL_NUM * DEPTH_NUM, std::vector<double>(SPARSE_WIDTH));
-    this->pVec.resize(ROW_NUM * COL_NUM * DEPTH_NUM);
-    this->diagE.resize(ROW_NUM * COL_NUM * DEPTH_NUM);
+    this->dV.resize(ROW_NUM * COL_NUM * DEPTH_NUM, 0.0);
+    this->sparseA.resize(ROW_NUM * COL_NUM * DEPTH_NUM, std::vector<double>(SPARSE_WIDTH, 0.0));
+    this->pVec.resize(ROW_NUM * COL_NUM * DEPTH_NUM, 0.0);
+    this->diagE.resize(ROW_NUM * COL_NUM * DEPTH_NUM, 0.0);
 };
 
 // returns -> [row_idx, col_idx]
@@ -528,9 +530,10 @@ void Grid::solve_pressure(double dt)
     // compute the final p matrix
     if(!this->solve_with_PCG())
     {
-        #if VERBOSE
+        this->failure_counter += 1;
+        // #if VERBOSE
         printf("ERROR SOLVING PCG\n");
-        #endif
+        // #endif
     }
 
     // distribute pVec to the pressure grid

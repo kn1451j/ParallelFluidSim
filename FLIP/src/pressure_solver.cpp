@@ -1,47 +1,64 @@
 #include "grid.hpp"
+#include <cmath>
+#include <cassert>
+
 // #include "profiler.hpp"
 
+#define SIGMA 0.25
+#define TAU 0.97
+
 void Grid::build_preconditioner(){
-    // TODO MAKE IT SO THAT AIR CELLS CAN EXIST
+    // Initialize preconditioner for all cells
     for (int depth_idx = 0; depth_idx < DEPTH_NUM; depth_idx ++)
     {   
-    for(int row_idx = 0; row_idx < ROW_NUM; row_idx++){
-        for(int col_idx = 0; col_idx < COL_NUM; col_idx++)
-        {
-            if(_fluid_cell({row_idx, col_idx, depth_idx})){
-
-            int idx = this->get_flat_idx({row_idx, col_idx, depth_idx});
-
-            grid_idx_t lneigh = this->_lneighbor({row_idx, col_idx, depth_idx});
-            grid_idx_t tneigh = this->_tneighbor({row_idx, col_idx, depth_idx});
-
-            double root = sparseA[idx][CENTER];
-
-            // TODO -> replace air and solid cells w 0
-            double t1,t2,t3,t4 = 0.0;
-            if(this->_fluid_cell(lneigh))
+        for(int row_idx = 0; row_idx < ROW_NUM; row_idx++){
+            for(int col_idx = 0; col_idx < COL_NUM; col_idx++)
             {
-                int lidx = this->get_flat_idx(lneigh);
-                double t2 = (sparseA[lidx][RIGHT]/diagE[lidx]) * (sparseA[lidx][RIGHT]/diagE[lidx]);
-                double t4 = (sparseA[lidx][RIGHT]/diagE[lidx]) * (sparseA[lidx][BOTTOM]/diagE[lidx]);
-            }
+                int idx = this->get_flat_idx({row_idx, col_idx, depth_idx});
+                
+                if(_fluid_cell({row_idx, col_idx, depth_idx})){
+                    double root = sparseA[idx][CENTER];
+                    double t1 = 0.0, t2 = 0.0, t3 = 0.0, t4 = 0.0, t5 = 0.0, t6 = 0.0;
 
-            if(this->_fluid_cell(tneigh))
-            {
-                int tidx = this->get_flat_idx(tneigh);
-                double t1 = (sparseA[tidx][BOTTOM]/diagE[tidx]) * (sparseA[tidx][BOTTOM]/diagE[tidx]);
-                double t3 = (sparseA[tidx][BOTTOM]/diagE[tidx]) * (sparseA[tidx][RIGHT]/diagE[tidx]);
-            }
+                    grid_idx_t lneigh = this->_lneighbor({row_idx, col_idx, depth_idx});
+                    grid_idx_t bneigh = this->_bneighbor({row_idx, col_idx, depth_idx});
+                    grid_idx_t fneigh = this->_fneighbor({row_idx, col_idx, depth_idx});
 
-            this->diagE[idx] = std::sqrt(root - t1 - t2 - t3 - t4);
+                    if(this->_fluid_cell(lneigh))
+                    {
+                        int lidx = this->get_flat_idx(lneigh);
+                        t2 = (sparseA[lidx][RIGHT] / diagE[lidx]) * (sparseA[lidx][RIGHT] / diagE[lidx]);
+                        // t4 = (sparseA[lidx][RIGHT] / diagE[lidx]) * ((sparseA[lidx][TOP] + sparseA[lidx][BACK]) / diagE[lidx]);
+                    }
 
+                    if(this->_fluid_cell(bneigh))
+                    {
+                        int bidx = this->get_flat_idx(bneigh);
+                        t1 = (sparseA[bidx][TOP] / diagE[bidx]) * (sparseA[bidx][TOP] / diagE[bidx]);
+                        // t3 = (sparseA[bidx][TOP] / diagE[bidx]) * ((sparseA[bidx][RIGHT]+sparseA[bidx][BACK]) / diagE[bidx]);
+                    }
+
+                    if(this->_fluid_cell(fneigh))
+                    {
+                        int fidx = this->get_flat_idx(fneigh);
+                        t5 = (sparseA[fidx][BACK] / diagE[fidx]) * (sparseA[fidx][BACK] / diagE[fidx]);
+                        // t6 = (sparseA[fidx][BOTTOM] / diagE[fidx]) * ((sparseA[fidx][TOP]+sparseA[fidx][RIGHT]) / diagE[fidx]);
+                    }
+
+                    // Ensure diagonal dominance and prevent division by zero
+                    double diag = root - t1 - t2 - t5 ; // (TAU * (t4 + t3 + t6));
+                    diag = diag < SIGMA * root ? root : diag;
+                    this->diagE[idx] = std::sqrt(std::max(diag, 1e-10));
+                }
+                else{
+                    this->diagE[idx] = 1.0;
+                }
             }
         }
     }
-    }
 }
 
-std::vector<double> Grid::apply_preconditioner(std::vector<double> res)
+void Grid::apply_preconditioner(std::vector<double> res, std::vector<double>& dest)
 {
     /*
     Calculate q for Lq = res
@@ -57,35 +74,43 @@ std::vector<double> Grid::apply_preconditioner(std::vector<double> res)
                     - A[cell_idx][TOP] * (q[tneighbor] / diagE[tneighbor]) 
                     ) / diagE[cell_idx]
     */ 
-   std::vector<double> q_est(ROW_NUM*COL_NUM*DEPTH_NUM);
+   std::vector<double> q_est(ROW_NUM*COL_NUM*DEPTH_NUM, 0.0);
    for (int depth_idx = 0; depth_idx < DEPTH_NUM; depth_idx ++)
    {   
     for(int row_idx = 0; row_idx < ROW_NUM; row_idx++){
         for(int col_idx = 0; col_idx < COL_NUM; col_idx++)
         {
             // find corresponding indices
-            int cell_idx = this->get_flat_idx({row_idx, col_idx, depth_idx});
+            if(_fluid_cell({row_idx, col_idx, depth_idx})){
+                int cell_idx = this->get_flat_idx({row_idx, col_idx, depth_idx});
 
-            grid_idx_t lneigh = this->_lneighbor({row_idx, col_idx, depth_idx});
-            grid_idx_t tneigh = this->_tneighbor({row_idx, col_idx, depth_idx});
+                    grid_idx_t lneigh = this->_lneighbor({row_idx, col_idx, depth_idx});
+                    grid_idx_t bneigh = this->_bneighbor({row_idx, col_idx, depth_idx});
+                    grid_idx_t fneigh = this->_fneighbor({row_idx, col_idx, depth_idx});
 
-            double left, top = 0.0;
-            if(this->_valid_cell(lneigh))
-            {
-                int lidx = this->get_flat_idx(lneigh);
-                left = sparseA[cell_idx][LEFT] * q_est[lidx] / diagE[lidx];
+                    double left = 0.0, bot = 0.0, front = 0.0;
+                    if(this->_valid_cell(lneigh) && this->_fluid_cell(lneigh))
+                    {
+                        int lidx = this->get_flat_idx(lneigh);
+                        left = sparseA[cell_idx][RIGHT] * q_est[lidx] / diagE[lidx];
+                    }
+
+                    if(this->_valid_cell(bneigh) && this->_fluid_cell(bneigh))
+                    {
+                        int bidx = this->get_flat_idx(bneigh);
+                        bot = sparseA[cell_idx][TOP] * q_est[bidx] / diagE[bidx];
+                    }
+
+                    if(this->_valid_cell(fneigh) && this->_fluid_cell(fneigh))
+                    {
+                        int fidx = this->get_flat_idx(fneigh);
+                        front = sparseA[cell_idx][BACK] * q_est[fidx] / diagE[fidx];
+                    }
+                    
+                    q_est[cell_idx] = (res[cell_idx] + left + bot + front) / diagE[cell_idx];
+                }
             }
-
-            if(this->_valid_cell(tneigh))
-            {
-                int tidx = this->get_flat_idx(tneigh);
-                top = sparseA[cell_idx][TOP] * q_est[tidx] / diagE[tidx];
-            }
-            
-            
-            q_est[cell_idx] = (res[cell_idx] - left - top) / diagE[cell_idx];
         }
-    }
     }
 
     // for (double el : q_est) 
@@ -103,57 +128,64 @@ std::vector<double> Grid::apply_preconditioner(std::vector<double> res)
                     - A[cell_idx][BOTTOM] * (q[bneighbor] / diagE[bneighbor]) 
                     ) / diagE[cell_idx]
     */
-    std::vector<double> z_est(ROW_NUM*COL_NUM*DEPTH_NUM);
-    for (int depth_idx = 0; depth_idx < DEPTH_NUM; depth_idx ++)
+    // std::vector<double> z_est(ROW_NUM*COL_NUM*DEPTH_NUM);
+    for (int depth_idx = DEPTH_NUM - 1; depth_idx >= 0; depth_idx --)
     {   
-    for(int row_idx = ROW_NUM - 1; row_idx >= 0; row_idx--){
-        for(int col_idx = COL_NUM - 1; col_idx >= 0; col_idx--)
-        {
-            // find corresponding indices
-            int cell_idx = this->get_flat_idx({row_idx, col_idx, depth_idx});
-
-            grid_idx_t rneigh = this->_rneighbor({row_idx, col_idx, depth_idx});
-            grid_idx_t bneigh = this->_bneighbor({row_idx, col_idx, depth_idx});
-
-            double right, bottom = 0.0;
-            if(this->_valid_cell(rneigh))
+        for(int row_idx = ROW_NUM - 1; row_idx >= 0; row_idx--){
+            for(int col_idx = COL_NUM - 1; col_idx >= 0; col_idx--)
             {
-                int ridx = this->get_flat_idx(rneigh);
-                right = sparseA[cell_idx][RIGHT] * z_est[ridx] / diagE[ridx];
-            }
+                int cell_idx = this->get_flat_idx({row_idx, col_idx, depth_idx});
+                if(_fluid_cell({row_idx, col_idx, depth_idx})){
 
-            if(this->_valid_cell(bneigh))
-            {
-                int bidx = this->get_flat_idx(bneigh);
-                bottom = sparseA[cell_idx][BOTTOM] * z_est[bidx] / diagE[bidx];
+                    grid_idx_t rneigh = this->_rneighbor({row_idx, col_idx, depth_idx});
+                    grid_idx_t tneigh = this->_tneighbor({row_idx, col_idx, depth_idx});
+                    grid_idx_t baneigh = this->_baneighbor({row_idx, col_idx, depth_idx});
+
+                    double right = 0.0, top = 0.0, back = 0.0;
+                    if(this->_fluid_cell(rneigh))
+                    {
+                        int ridx = this->get_flat_idx(rneigh);
+                        right = sparseA[cell_idx][RIGHT] * dest[ridx] / diagE[cell_idx];
+                    }
+
+                    if(this->_fluid_cell(tneigh))
+                    {
+                        int tidx = this->get_flat_idx(tneigh);
+                        top = sparseA[cell_idx][TOP] * dest[tidx] / diagE[cell_idx];
+                    }
+
+                    if(this->_fluid_cell(baneigh))
+                    {
+                        int baidx = this->get_flat_idx(baneigh);
+                        back = sparseA[cell_idx][BACK] * dest[baidx] / diagE[cell_idx];
+                    }
+                    
+                    dest[cell_idx] = (q_est[cell_idx] + right + top + back) / diagE[cell_idx];
+                } 
+                else {
+                    dest[cell_idx] = 0.0;
+                }
             }
-            
-            
-            z_est[cell_idx] = (q_est[cell_idx] - bottom - right) / diagE[cell_idx];
         }
     }
-    }
-
-    return z_est;
 }
 
-// 
-std::vector<double> Grid::apply_A(std::vector<double> search)
+
+void Grid::apply_A(std::vector<double> search, std::vector<double> &dest)
 {
     // printf("A:\n");
-    std::vector<double> result(this->sparseA.size());
     for (int depth_idx = 0; depth_idx < DEPTH_NUM; depth_idx ++)
     {   
     for(int row_idx = 0; row_idx < ROW_NUM; row_idx++){
         for(int col_idx = 0; col_idx < COL_NUM; col_idx++)
         {
+            int cell_idx = this->get_flat_idx({row_idx, col_idx, depth_idx});
+
             // multiply the of A with the corresponding pij values
             if(this->_fluid_cell({row_idx, col_idx, depth_idx}))
             {
-                int cell_idx = this->get_flat_idx({row_idx, col_idx, depth_idx});
-
                 // iterate through 5 values and apply A
-                #if DEBUG
+                // #if DEBUG
                 // printf("(%d, %d, %d): %f, %f, %f, %f, %f, %f, %f\n", row_idx, col_idx,
                 //     depth_idx,
                 //     this->sparseA[cell_idx][LEFT], 
@@ -164,9 +196,9 @@ std::vector<double> Grid::apply_A(std::vector<double> search)
                 // printf("%f\n",
                 //     search[cell_idx]
                 // );
-                #endif
+                // #endif
                 
-                result[cell_idx] += this->sparseA[cell_idx][CENTER] * search[cell_idx];
+                dest[cell_idx] = this->sparseA[cell_idx][CENTER] * search[cell_idx];
 
                 grid_idx_t lneigh = this->_lneighbor({row_idx, col_idx, depth_idx});
                 grid_idx_t tneigh = this->_tneighbor({row_idx, col_idx, depth_idx});
@@ -174,13 +206,13 @@ std::vector<double> Grid::apply_A(std::vector<double> search)
                 if(this->_valid_cell(lneigh))
                 {
                     int lidx = this->get_flat_idx(lneigh);
-                    result[cell_idx] += this->sparseA[cell_idx][LEFT] * search[lidx];
+                    dest[cell_idx] += this->sparseA[cell_idx][LEFT] * search[lidx];
                 }
     
                 if(this->_valid_cell(tneigh))
                 {
                     int tidx = this->get_flat_idx(tneigh);
-                    result[cell_idx] += this->sparseA[cell_idx][TOP] * search[tidx];
+                    dest[cell_idx] += this->sparseA[cell_idx][TOP] * search[tidx];
                 }
 
                 grid_idx_t rneigh = this->_rneighbor({row_idx, col_idx, depth_idx});
@@ -189,13 +221,13 @@ std::vector<double> Grid::apply_A(std::vector<double> search)
                 if(this->_valid_cell(rneigh))
                 {
                     int ridx = this->get_flat_idx(rneigh);
-                    result[cell_idx] += this->sparseA[cell_idx][RIGHT] * search[ridx];
+                    dest[cell_idx] += this->sparseA[cell_idx][RIGHT] * search[ridx];
                 }
     
                 if(this->_valid_cell(bneigh))
                 {
                     int bidx = this->get_flat_idx(bneigh);
-                    result[cell_idx] += this->sparseA[cell_idx][BOTTOM] * search[bidx];
+                    dest[cell_idx] += this->sparseA[cell_idx][BOTTOM] * search[bidx];
                 }
 
                 grid_idx_t fneigh = this->_fneighbor({row_idx, col_idx, depth_idx});
@@ -204,22 +236,24 @@ std::vector<double> Grid::apply_A(std::vector<double> search)
                 if(this->_valid_cell(fneigh))
                 {
                     int fidx = this->get_flat_idx(fneigh);
-                    result[cell_idx] += this->sparseA[cell_idx][FRONT] * search[fidx];
+                    dest[cell_idx] += this->sparseA[cell_idx][FRONT] * search[fidx];
                 }
     
                 if(this->_valid_cell(baneigh))
                 {
                     int baidx = this->get_flat_idx(baneigh);
-                    result[cell_idx] += this->sparseA[cell_idx][BACK] * search[baidx];
+                    dest[cell_idx] += this->sparseA[cell_idx][BACK] * search[baidx];
                 }
 
+                assert(!std::isnan(dest[cell_idx]));
                 // printf("result: %f\n", result[cell_idx]);
+            }
+            else{
+                dest[cell_idx] = 0;
             }
         }
     }
     }
-
-    return result;
 }
 
 /*
@@ -229,7 +263,7 @@ std::vector<double> Grid::apply_A(std::vector<double> search)
 bool Grid::solve_with_PCG()
 {
     // construct preconditioner
-    this->build_preconditioner();
+    // this->build_preconditioner();
 
     // printf("built preconditioner\n");
 
@@ -257,13 +291,16 @@ bool Grid::solve_with_PCG()
     if(converged) return true;
 
     // initialize necessary vectors
-    std::vector<double> auxilary_vec;
-    std::vector<double> search_vec = residual;
+    // std::vector<double> auxilary_vec(ROW_NUM*COL_NUM*DEPTH_NUM, 0.0);
+    // this->apply_preconditioner(residual, auxilary_vec);
+    std::vector<double> auxilary_vec = residual;
+    std::vector<double> search_vec = auxilary_vec;
 
     // printf("applied preconditioner\n");
 
     // for (double el : auxilary_vec) 
     //     printf("%f ", el);
+    //     // continue;
     // printf("\n");
 
     // learning rate
@@ -273,7 +310,7 @@ bool Grid::solve_with_PCG()
     // idk what any of this math does
     for(int iter = 0; iter < MAX_ITER; iter++)
     {
-        auxilary_vec = this->apply_A(search_vec);
+        this->apply_A(search_vec, auxilary_vec);
 
         // printf("applied A\n");
 
@@ -303,13 +340,14 @@ bool Grid::solve_with_PCG()
         // printf("s_dot_a: %f\n");
 
         // A is singular! everything is ok i think
-        if(s_dot_a<0.0000001) return true;
+        if(abs(s_dot_a)<EPS) return true;
 
         double alpha = sigma / s_dot_a;
 
         // update estimates
         for (int idx = 0; idx < this->pVec.size(); idx++)
         {
+            // printf("%f ", auxilary_vec[idx]);
             this->pVec[idx] += alpha * search_vec[idx];
             residual[idx] -= alpha * auxilary_vec[idx];
         }
@@ -321,24 +359,28 @@ bool Grid::solve_with_PCG()
             if(std::abs(el) > TOL) {
                 converged = false;
                 max = std::max(max,std::abs(el));
-                // break;
+                break;
             }
 
         // printf("MAX VALUE: %f\n", max);
-        // if(converged) return true;
+        if(converged){ 
+            // printf("\n");
+            return true;}
 
         // printf("res\n");
         // for (double el : residual) 
         //     printf("%f ", el);
         // printf("\n");
 
-        // auxilary_vec = this->apply_preconditioner(residual);
+        // this->apply_preconditioner(residual, auxilary_vec);
+        // double sigma_new = std::inner_product(residual.begin(), residual.end(), auxilary_vec.begin(), 0.0);
         double sigma_new = std::inner_product(residual.begin(), residual.end(), residual.begin(), 0.0);
 
         // printf("applied preconditioner\n");
 
         // update search vector
         for (int idx = 0; idx < this->pVec.size(); idx++)
+            // search_vec[idx] = auxilary_vec[idx] + (sigma_new / sigma) * search_vec[idx];
             search_vec[idx] = residual[idx] + (sigma_new / sigma) * search_vec[idx];
         
         
