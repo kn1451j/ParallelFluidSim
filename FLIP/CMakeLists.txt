@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(FLIP)
 
+if(FALSE)
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
+endif()
 
 add_executable(run run.cpp)
 

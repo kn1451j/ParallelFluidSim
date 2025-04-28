@@ -1,7 +1,8 @@
 #include "fluid.hpp"
 #include "profiler.hpp"
 
-Fluid::Fluid() : display()
+Fluid::Fluid() 
+// : display()
 {
     this->particles.resize(NUM_PARTICLES);
     this->width = WIDTH;
@@ -46,10 +47,14 @@ Fluid::~Fluid(){
 void Fluid::run()
 {
     //initializes the display
+    #if DISPLAY
     this->display_particles();
+    #endif
 
     // start timestep timer
+    #if REALTIME
     this->prev_timestep = std::chrono::high_resolution_clock::now();
+    #endif
 
     int iter_counter = 0; // incremented only if profiling, o.w. essentially an infinite loop
     while(iter_counter < NUM_TIME_STEPS){
@@ -57,13 +62,15 @@ void Fluid::run()
 
         // printf("Updated %zu particles\n", this->particles.size());
 
-        // display a frame (for now just in 2D)
+        #if DISPLAY
         this->display_particles();
 
         #if (!DEBUG)
         if(cv::waitKey(1)>0) break;
         #else
         cv::waitKey(0); // frame by frame for debugging
+        #endif
+
         #endif
 
         #if PROFILE_MODE
@@ -156,6 +163,7 @@ void Fluid::external_forces(double timestep)
 */
 void Fluid::display_particles()
 {
+    #if DISPLAY
     // std::vector<cv::Point3f> points;
     // // Fill the 'points' matrix with your 3D data
     // for(Particle p : this->particles)
@@ -194,6 +202,7 @@ void Fluid::display_particles()
     }
 
     cv::imshow("Fluid Sim Slice", this->display);
+    #endif
 }
 
 void Fluid::print_particles()

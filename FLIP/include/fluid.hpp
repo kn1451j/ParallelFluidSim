@@ -1,9 +1,12 @@
 #include <math.h>
 #include <chrono>
-#include <opencv2/opencv.hpp>
-#include <opencv2/viz.hpp>
 
 #include "grid.hpp"
+
+#if DISPLAY
+#include <opencv2/opencv.hpp>
+#include <opencv2/viz.hpp>
+#endif
 
 static Point GRAVITY = Point(0.0f, -9.8f, 0.0f);
 
@@ -37,5 +40,7 @@ class Fluid
 
         // for displaying a 3D image
         // cv::viz::Viz3d display;
+        #ifdef DISPLAY
         cv::Mat display;
+        #endif
 };

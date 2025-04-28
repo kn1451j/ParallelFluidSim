@@ -4,6 +4,7 @@
 #define DEBUG 0
 #define REALTIME 0
 #define VERBOSE 1
+#define DISPLAY 0
 
 // how many timesteps to use for profiling
 #define NUM_TIME_STEPS 100
