@@ -46,6 +46,7 @@ Fluid::~Fluid(){
 
 void Fluid::run()
 {
+    PROFILE_START("total");
     //initializes the display
     #if DISPLAY
     this->display_particles();
@@ -77,6 +78,7 @@ void Fluid::run()
         iter_counter++;
         #endif
     }
+    PROFILE_END("total");
 
     // print summary after
     PROFILE_PRINT;

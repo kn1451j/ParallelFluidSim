@@ -95,7 +95,7 @@ class Grid
     */
     public:
         // makes a staggered grid with ROW_NUM rows and COL_NUM cols
-        Grid(double width, double height, double depth, double density, Profiler *profiler);
+        Grid(double width, double height, double depth, double density);
 
         // exclusive owners of the pressure solver
         ~Grid() {};
@@ -257,36 +257,13 @@ class Grid
             this->sparseA[this->get_flat_idx(cell)][dir] += entry;
         };
 
-        void reset(){
-            // printf("resetting solver...\n");
-            for(int idx = 0; idx < this->dV.size(); idx++)
-                this->dV[idx] = 0.0;
-
-            for(int idx = 0; idx < this->pVec.size(); idx++)
-                this->pVec[idx] = 0.0;
-        
-
-            for(int idx = 0; idx < this->diagE.size(); idx++)
-                this->diagE[idx] = 0.0;
-            
-            for(std::vector<double>& vec : this->sparseA){
-                for(int idx = 0; idx < vec.size(); idx++)
-                    vec[idx] = 0.0;
-            }
-        };
-
-        // pressure components
-        std::vector<double> dV;
-        // WARNING -> right now, because we only store sparseA as a NUM_CELLS x 5 length matrix, its not spatially correct
-        std::vector<std::vector<double>> sparseA;
-        std::vector<double> pVec;
-        std::vector<double> diagE;
-
         // methods for solving PCG
-        void apply_preconditioner(std::vector<double> res, std::vector<double>& dest);
-        void apply_A(std::vector<double> search, std::vector<double> &dest);
-        void build_preconditioner();
-        bool solve_with_PCG();
+        // void apply_preconditioner(std::vector<double> res, std::vector<double>& dest);
+        // void apply_A(std::vector<double> search, std::vector<double> &dest);
+        // void build_preconditioner();
+        // bool solve_with_PCG();
 
-        Profiler *profiler;
+        // parallel methods
+        void init_par();
+        void solve_with_PCG_par();
 };

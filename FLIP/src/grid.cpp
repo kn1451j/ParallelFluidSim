@@ -4,83 +4,97 @@
 #include "grid.hpp"
 // #include "profiler.hpp"
 
-Grid::Grid(double width, double height, double depth, double density, Profiler *p = nullptr) {
-    // initialize profiler
-    this->profiler = p;
+Grid::Grid(double width, double height, double depth, double density) {
+    int nproc;
+    int pid;
 
-    this->width = width;
-    this->height = height;
-    this->depth = depth;
-    this->cell_width = width / COL_NUM;
-    this->cell_height = height / ROW_NUM;
-    this->cell_depth = depth / DEPTH_NUM;
-    this->cell_volume = this->cell_width * this->cell_height * this->cell_depth;
-    this->density = density;
+    // Initialize MPI
+    MPI_Init(&argc, &argv);
+    // Get process rank
+    MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+    // Get total number of processes
+    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
-    this->failure_counter = 0;
+    // initialize all shared process variables
+    if (pid == 0) {
+        this->width = width;
+        this->height = height;
+        this->depth = depth;
+        this->cell_width = width / COL_NUM;
+        this->cell_height = height / ROW_NUM;
+        this->cell_depth = depth / DEPTH_NUM;
+        this->cell_volume = this->cell_width * this->cell_height * this->cell_depth;
+        this->density = density;
 
-    // initialize the "poses" for each vertex
-    for(size_t depth_idx = 0; depth_idx<DEPTH_NUM; depth_idx++)
-    {
+        this->failure_counter = 0;
+
+        // initialize the "poses" for each vertex
+        for(size_t depth_idx = 0; depth_idx<DEPTH_NUM; depth_idx++)
+        {
+            for(size_t row_idx = 0; row_idx<ROW_NUM; row_idx++)
+            {
+                for(size_t col_idx = 0; col_idx<COL_NUM; col_idx++)
+                {
+                    // set the center position of each cell
+                    double x = (col_idx+0.5)*this->cell_width;
+                    double y = (row_idx+0.5)*this->cell_height;
+                    double z = (depth_idx+0.5)*this->cell_depth;
+                    this->cells[row_idx][col_idx][depth_idx].position = Point(x, y, z);
+                    // printf(this->cells[row_idx][col_idx].position.print().c_str());
+
+                    Vertex& vi0 = this->vertical_velocity[row_idx][col_idx][depth_idx];
+                    double vx = this->cell_width*(col_idx+0.5);
+                    double vy = this->cell_height*row_idx;
+                    double vz = this->cell_depth*(depth_idx+0.5);
+                    vi0.position = Point(vx, vy, vz);
+
+                    Vertex& ui0 = this->horizontal_velocity[row_idx][col_idx][depth_idx];
+                    double ux = this->cell_width*col_idx;
+                    double uy = this->cell_height*(row_idx+0.5);
+                    double uz = this->cell_depth*(depth_idx+0.5);
+                    ui0.position = Point(ux, uy, uz);
+
+                    Vertex& zi0 = this->depth_velocity[row_idx][col_idx][depth_idx];
+                    double zx = this->cell_width*(col_idx+0.5);
+                    double zy = this->cell_height*(row_idx+0.5);
+                    double zz = this->cell_depth*depth_idx;
+                    zi0.position = Point(zx, zy, zz);
+                }
+
+                Vertex& ui0 = this->horizontal_velocity[row_idx][COL_NUM][depth_idx];
+                double ux = this->cell_width*COL_NUM;
+                double uy = this->cell_height*(row_idx+0.5);
+                double uz = this->cell_depth*(depth_idx+0.5);
+                ui0.position =  Point(ux, uy, uz);
+            }
+
+            for(size_t col_idx = 0; col_idx<COL_NUM; col_idx++)
+            {
+                Vertex& vi0 = this->vertical_velocity[ROW_NUM][col_idx][depth_idx];
+                double vx = this->cell_width*(col_idx+0.5);
+                double vy = this->cell_height*ROW_NUM;
+                double vz = this->cell_depth*(depth_idx+0.5);
+                vi0.position = Point(vx, vy, vz);
+            }
+        }
+        
         for(size_t row_idx = 0; row_idx<ROW_NUM; row_idx++)
         {
             for(size_t col_idx = 0; col_idx<COL_NUM; col_idx++)
             {
-                // set the center position of each cell
-                double x = (col_idx+0.5)*this->cell_width;
-                double y = (row_idx+0.5)*this->cell_height;
-                double z = (depth_idx+0.5)*this->cell_depth;
-                this->cells[row_idx][col_idx][depth_idx].position = Point(x, y, z);
-                // printf(this->cells[row_idx][col_idx].position.print().c_str());
-
-                Vertex& vi0 = this->vertical_velocity[row_idx][col_idx][depth_idx];
-                double vx = this->cell_width*(col_idx+0.5);
-                double vy = this->cell_height*row_idx;
-                double vz = this->cell_depth*(depth_idx+0.5);
-                vi0.position = Point(vx, vy, vz);
-
-                Vertex& ui0 = this->horizontal_velocity[row_idx][col_idx][depth_idx];
-                double ux = this->cell_width*col_idx;
+                Vertex& zi0 = this->depth_velocity[row_idx][col_idx][DEPTH_NUM];
+                double ux = this->cell_width*(col_idx+0.5);
                 double uy = this->cell_height*(row_idx+0.5);
-                double uz = this->cell_depth*(depth_idx+0.5);
-                ui0.position = Point(ux, uy, uz);
-
-                Vertex& zi0 = this->depth_velocity[row_idx][col_idx][depth_idx];
-                double zx = this->cell_width*(col_idx+0.5);
-                double zy = this->cell_height*(row_idx+0.5);
-                double zz = this->cell_depth*depth_idx;
-                zi0.position = Point(zx, zy, zz);
+                double uz = this->cell_depth*DEPTH_NUM;
+                zi0.position = Point(ux, uy, uz);
             }
-
-            Vertex& ui0 = this->horizontal_velocity[row_idx][COL_NUM][depth_idx];
-            double ux = this->cell_width*COL_NUM;
-            double uy = this->cell_height*(row_idx+0.5);
-            double uz = this->cell_depth*(depth_idx+0.5);
-            ui0.position =  Point(ux, uy, uz);
-        }
-
-        for(size_t col_idx = 0; col_idx<COL_NUM; col_idx++)
-        {
-            Vertex& vi0 = this->vertical_velocity[ROW_NUM][col_idx][depth_idx];
-            double vx = this->cell_width*(col_idx+0.5);
-            double vy = this->cell_height*ROW_NUM;
-            double vz = this->cell_depth*(depth_idx+0.5);
-            vi0.position = Point(vx, vy, vz);
         }
     }
+
+    // initialize GridBlocks for the pressure solver
+    WIDTH
+    this->gridBlocks.resize()
     
-    for(size_t row_idx = 0; row_idx<ROW_NUM; row_idx++)
-    {
-        for(size_t col_idx = 0; col_idx<COL_NUM; col_idx++)
-        {
-            Vertex& zi0 = this->depth_velocity[row_idx][col_idx][DEPTH_NUM];
-            double ux = this->cell_width*(col_idx+0.5);
-            double uy = this->cell_height*(row_idx+0.5);
-            double uz = this->cell_depth*DEPTH_NUM;
-            zi0.position = Point(ux, uy, uz);
-        }
-    }
-
     // initialize pressure solver
     this->dV.resize(ROW_NUM * COL_NUM * DEPTH_NUM, 0.0);
     this->sparseA.resize(ROW_NUM * COL_NUM * DEPTH_NUM, std::vector<double>(SPARSE_WIDTH, 0.0));
