@@ -91,15 +91,13 @@ Grid::Grid(double width, double height, double depth, double density) {
         }
     }
 
-    // initialize GridBlocks for the pressure solver
-    WIDTH
-    this->gridBlocks.resize()
-    
-    // initialize pressure solver
-    this->dV.resize(ROW_NUM * COL_NUM * DEPTH_NUM, 0.0);
-    this->sparseA.resize(ROW_NUM * COL_NUM * DEPTH_NUM, std::vector<double>(SPARSE_WIDTH, 0.0));
-    this->pVec.resize(ROW_NUM * COL_NUM * DEPTH_NUM, 0.0);
-    this->diagE.resize(ROW_NUM * COL_NUM * DEPTH_NUM, 0.0);
+        // initialize GridBlocks for the pressure solver
+        // initialize all shared process variables
+        // initialize pressure solver -> every grid block gets their own
+        this->dV.resize(BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE, 0.0);
+        this->sparseA.resize(BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE, std::vector<double>(SPARSE_WIDTH, 0.0));
+        this->pVec.resize(BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE, 0.0);
+        this->diagE.resize(BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE, 0.0);
 };
 
 // returns -> [row_idx, col_idx]
@@ -203,6 +201,7 @@ Perform a weighted particle to grid update for the velocities
 */
 void Grid::transfer_to_grid(std::vector<Particle>& particles)
 {
+    if (pid == 0) {
     // reset cells
     for (size_t depth_idx = 0; depth_idx<DEPTH_NUM; depth_idx++){
         for(size_t row_idx = 0; row_idx<ROW_NUM; row_idx++)
@@ -332,6 +331,7 @@ void Grid::transfer_to_grid(std::vector<Particle>& particles)
             if(zi0.normalization>EPS) zi0.value /= zi0.normalization;
         }
     }
+    }
 }
 
 /*
@@ -339,6 +339,7 @@ Perform a weighted PIC-FLIP fluid update by bilinearly interpolating grid vertic
 */
 void Grid::transfer_from_grid(std::vector<Particle>& particles)
 {
+    if (pid == 0) {
     for(Particle& p : particles)
     {
         p.velocity = Point();
@@ -390,6 +391,7 @@ void Grid::transfer_from_grid(std::vector<Particle>& particles)
         if(velocity_norm>0)
             p.velocity.z /= velocity_norm;
     }
+    }
 }
 
 /*
@@ -402,6 +404,7 @@ void Grid::transfer_from_grid(std::vector<Particle>& particles)
 */
 void Grid::solve_pressure(double dt)
 {
+    // THIS IS NOW DONE SEPERATELY BY EVERY PROCESS!
     // reset the pressure solver each time
     this->reset();
 
@@ -550,8 +553,11 @@ void Grid::solve_pressure(double dt)
         // #endif
     }
 
+    // all send to pid 0
+
     // distribute pVec to the pressure grid
     // TODO -> idt this is actually necessary but might be nice for viz ?
+    if (pid == 0) {
     for (int depth_idx = 0; depth_idx < DEPTH_NUM; depth_idx ++)
     {    
         for (int row_idx = 0; row_idx < ROW_NUM; row_idx ++)
@@ -705,10 +711,12 @@ void Grid::solve_pressure(double dt)
 
     printf("\n");
     #endif
+    }
 }
 
 void Grid::print_grid()
 {
+    if (pid == 0) {
     for (size_t depth_idx = 0; depth_idx < DEPTH_NUM; depth_idx ++)
     {
     for(size_t row_idx = 0; row_idx<ROW_NUM; row_idx++)
@@ -723,6 +731,7 @@ void Grid::print_grid()
                 depth_velocity[row_idx][col_idx][depth_idx].value);
             printf("    density: %f\n", cells[row_idx][col_idx][depth_idx].density);
         }
+    }
     }
     }
 }

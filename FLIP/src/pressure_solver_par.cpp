@@ -3,15 +3,29 @@
 #include <cassert>
 #include <mpi.h>
 
+struct NeighborBlock
+{
+    double border[BLOCK_SIZE * BLOCK_SIZE];
+};
+
 /*
 Each grid block owns a block of a grid:
 Grid block i out of nproc will own the indices (i * width -> width - 1, j * width -> width - 1, k * width -> width - 1)
 for width = nproc / i and i,j,k \in nproc
+
+Every grid i,j,k block has a dependence on 
+(i - 1) * width, width * j[:width], width * k[:width] -> (i-1,j,k)
+i, (j - 1) * width , k -> i * width, j, k -> (i-1,j,k)
 */
 class GridBlock
 {
     public:
-        GridBlock();
+        GridBlock(int i, int j, int k)
+        {
+
+        }
+
+
         // pressure components
         std::vector<double> dV;
         std::vector<std::vector<double>> sparseA;

@@ -9,6 +9,9 @@
 
 class Profiler;
 
+#define NUM_THREADS 8
+#define BLOCK_SIZE 16
+
 enum Direction {
     LEFT = 0, 
     RIGHT = 1, 
@@ -156,6 +159,13 @@ class Grid
 
         // number of times the pressure solver failed to converge
         int failure_counter;
+
+        // parallelization primitives
+        int pid;
+        int nproc;
+        int grid_i;
+        int grid_j;
+        int grid_k;
 
         void print_grid();
 
