@@ -297,6 +297,10 @@ class Grid
         std::vector<double> pVec;
         std::vector<double> diagE;
 
+        std::vector<double>myDV;
+        std::vector<std::vector<double>> mysparseA;
+        std::vector<double> mypVec;
+
         // methods for solving PCG
         std::vector<double> apply_preconditioner(std::vector<double> res);
         std::vector<double> apply_A(std::vector<double> search);
